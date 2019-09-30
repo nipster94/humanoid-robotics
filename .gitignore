@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# dlib shared lib
+*dlib/shared_build
+
+#shape predictor 
+
