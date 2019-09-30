@@ -1,0 +1,10 @@
+<launch> 	
+	<node pkg="face_detection" type="ros_face_detection" name="ros_face_detection" output="screen">		
+		<param name="SKIP_FRAMES" value="1" /> 		
+		<param name="CHECK_PERSON_DETECTED" value="3" /> 	
+		<param name="CHECK_PERSON_DISAPPEAR" value="10" />
+		<param name="REQUEST_GENDER_CALLBACK_DELAY" value="3" />
+		<param name="RANGE_FOR_DETECTED" value="180" />  		
+		<param name="RANGE_FOR_TRACKING" value="100" />
+	</node>
+</launch>
