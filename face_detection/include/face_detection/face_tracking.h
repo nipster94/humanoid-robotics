@@ -76,6 +76,8 @@ class FaceTracking
                            cv::vector<cv::vector<cv::Point>> &jaw_line,
                            int &max_area_index);
 
+        void getEllipseCenter();
+
 };
 
 #endif

@@ -81,3 +81,9 @@ void ROSFaceDetection::imageCallBack(const sensor_msgs::ImageConstPtr &msg){
     debug_msg_pub_.publish(debug_msg);
 }
 
+void ROSFaceDetection::getEllipseCenter(){
+
+}
+
+
+
