@@ -24,9 +24,31 @@ void FaceTracking::trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_,s
       int tracking_index;
       std::vector<dlib::rectangle> faces = detector(cimg);
 
-      char str[200];
-      sprintf( str, "TRACKING 2");
-      putText( image_, str, cv::Point(image_.rows/2,image_.cols/2), cv::FONT_HERSHEY_PLAIN, 2,  cv::Scalar(0,255,0), 3, 8, false );
+      if( faces.size() > 0 ){
+          face_found = true;
+          if( ground_truth.size() > 0 ) tracking_index = getTrackingIndex(cimg,faces);
+          cfaces = getCloseFaces(faces,tracking_index);
+
+          if( cfaces.size() > 0 ){
+              cv::vector< cv::vector<cv::Point> > all_land_mark;
+              cv::vector< cv::vector<cv::Point> > jaw_line;
+              int max_area_index;
+
+              getMaxAreaIndex(cimg,cfaces,all_land_mark,jaw_line,max_area_index);
+              startTracking(image_,cfaces,all_land_mark,jaw_line,max_area_index);
+          }
+      }
+
+      else{
+              face_found = false;
+      }
+
+
+
+
+//      char str[200];
+//      sprintf( str, "TRACKING 2");
+//      putText( image_, str, cv::Point(image_.rows/2,image_.cols/2), cv::FONT_HERSHEY_PLAIN, 2,  cv::Scalar(0,255,0), 3, 8, false );
 
 //      if( faces.size() > 0 ){
 

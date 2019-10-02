@@ -34,5 +34,9 @@
 # dlib shared lib
 *dlib/shared_build
 
-#shape predictor 
+#shape predictor and Other file
+Extra
+
+#CMakeList.txt from catkin_make
+CMakeLists.txt
 

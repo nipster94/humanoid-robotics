@@ -7,7 +7,7 @@ ROSFaceDetection::ROSFaceDetection():
 //    std::string ros_path_ = ros::package::getPath("face_detection_ws");
 //    ros_path_.erase(ros_path_.find(pkg_), pkg_.size());
 //    std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/face_detection/shape_predictor_68_face_landmarks.dat";
-    std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/face_detection/shape_predictor_5_face_landmarks.dat";
+    std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/shape_predictor_68_face_landmarks.dat";
 
     image_sub_ = it_.subscribe("/camera/color/image_raw", 1, &ROSFaceDetection::imageCallBack,this);
 

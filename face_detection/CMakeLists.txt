@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5.1)
 project(face_detection)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -7,6 +7,13 @@ project(face_detection)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+set(CMAKE_CXX_STANDARD 14)
+set(GCC_COVERAGE_COMPILE_FLAGS " -Ofast")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+set(USE_AVX_INSTRUCTIONS ON CACHE BOOL "Use AVX instructions")
+
+add_subdirectory(/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/dlib-19.17/dlib dlib_build)
+
 find_package(OpenCV REQUIRED)
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
@@ -31,16 +38,16 @@ find_package(catkin REQUIRED COMPONENTS
 
 
 ## ADDING C++11
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-else()
-    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-endif()
+#include(CheckCXXCompilerFlag)
+#CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
+#CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+#if(COMPILER_SUPPORTS_CXX11)
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+#elseif(COMPILER_SUPPORTS_CXX0X)
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+#else()
+#    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+#endif()
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
@@ -70,25 +77,25 @@ include_directories(include/face_detection
 #include_directories(include)
 #include_directories(/usr/include)
 
-add_library(dlib SHARED IMPORTED) # Imported(!) dlib target
-set_target_properties(dlib PROPERTIES IMPORTED_LOCATION "/home/nipun/dlib/build/libdlib.so")
+#add_library(dlib SHARED IMPORTED) # Imported(!) dlib target
+#set_target_properties(dlib PROPERTIES IMPORTED_LOCATION "/home/nipun/dlib/build/libdlib.so")
 
 #include(/home/nipun/Backup_set_1/our_project/face_detection/src/dlib/shared_build/CMakeFiles/Export/lib/cmake)
 #dlib glog
 
-#add_subdirectory(/home/nipun/dlib shared_build)
+#add_subdirectory(/home/nipun/dlib shared_build)  glog -llapack
 
-#add_library(face_tracking src/face_tracking.cpp)
-#target_link_libraries(face_tracking ${catkin_LIBRARIES} ${OpenCV_LIBS} dlib glog -llapack)
-#add_dependencies(face_tracking ${catkin_EXPORTED_TARGETS})
+add_library(face_tracking src/face_tracking.cpp)
+target_link_libraries(face_tracking ${catkin_LIBRARIES} ${OpenCV_LIBS} dlib::dlib)
+add_dependencies(face_tracking ${catkin_EXPORTED_TARGETS})
 
-#add_executable(ros_face_detection src/face_detection_node.cpp src/face_detection.cpp)
-#target_link_libraries(ros_face_detection face_tracking ${catkin_LIBRARIES})
-#add_dependencies(ros_face_detection ${catkin_EXPORTED_TARGETS})
+add_executable(ros_face_detection src/face_detection_node.cpp src/face_detection.cpp)
+target_link_libraries(ros_face_detection face_tracking ${catkin_LIBRARIES})
+add_dependencies(ros_face_detection ${catkin_EXPORTED_TARGETS})
 
-add_executable(test_class src/test.cpp)
-target_link_libraries(test_class ${catkin_LIBRARIES} ${OpenCV_LIBS} dlib glog -llapack -lblas -lpthread -lX11)
-add_dependencies(test_class ${catkin_EXPORTED_TARGETS})
+#add_executable(test_class src/test.cpp)
+#target_link_libraries(test_class ${catkin_LIBRARIES} ${OpenCV_LIBS} dlib glog -llapack -lblas -lpthread -lX11)
+#add_dependencies(test_class ${catkin_EXPORTED_TARGETS})
 
 #add_executable(talker src/talker.cpp)
 #target_link_libraries(talker ${catkin_LIBRARIES})
@@ -109,3 +116,6 @@ add_dependencies(test_class ${catkin_EXPORTED_TARGETS})
 #install(DIRECTORY include/face_detection/
 #  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 #)
+#Add a change in the file
+
+
