@@ -7,28 +7,32 @@ ROSFaceDetection::ROSFaceDetection():
 //    std::string ros_path_ = ros::package::getPath("face_detection_ws");
 //    ros_path_.erase(ros_path_.find(pkg_), pkg_.size());
 //    std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/face_detection/shape_predictor_68_face_landmarks.dat";
-    std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/face_detection/shape_predictor_5_face_landmarks.dat";
+    std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/Extra/shape_predictor_68_face_landmarks.dat";
 
     image_sub_ = it_.subscribe("/camera/color/image_raw", 1, &ROSFaceDetection::imageCallBack,this);
-
     image_pub_ = it_.advertise("/face_tracking/output_video", 1);
 
-    debug_msg_pub_ = nh_.advertise<std_msgs::String>("debug_msg", 1000);
+    debug_msg_pub_ = nh_.advertise<std_msgs::String>("debug_msg", 1);
+    img_points_ = nh_.advertise<geometry_msgs::PointStamped>("face_detection/img_points", 1);
+    move_base_pub_ = nh_.advertise<face_detection::MoveBase>("face_detection/move_base",1);
+ 
+    ros::param::get("~SKIP_FRAMES",params["SKIP_FRAMES"]);
+    ros::param::get("~RANGE_FOR_DETECTED", params["RANGE_FOR_DETECTED"]);
+    ros::param::get("~RANGE_FOR_TRACKING", params["RANGE_FOR_TRACKING"]);
 
-    skip_val = 1;
-
-    faceTracker.initialize(ros_path_);
+    faceTracker.initialize(ros_path_,params);
 }
 
 void ROSFaceDetection::execute(){
     ROS_INFO("START FACE TRACKING NODE !!!!");
     ros::Rate rate(10);
     while (ros::ok()) {
+       getEllipseCenter();
+       moveBase();
        count_++;
        if (count_ > 1000) count_ = 0;
        rate.sleep();
        ros::spinOnce();
-
     }
 }
 
@@ -43,46 +47,37 @@ void ROSFaceDetection::imageCallBack(const sensor_msgs::ImageConstPtr &msg){
     cv::Mat output_image_;
     std::string message;
 
-    faceTracker.trackLandmark(cv_ptr->image,output_image_,message);
-    cv_ptr->image = output_image_;
-    image_pub_.publish(cv_ptr->toImageMsg());
+    if(count_ % params["SKIP_FRAMES"] == 0){
+        faceTracker.trackLandmark(cv_ptr->image,output_image_,message);
+        cv_ptr->image = output_image_;
+        image_pub_.publish(cv_ptr->toImageMsg());
+    }
+    else image_pub_.publish(cv_ptr->toImageMsg());
 
-//    output_image_ = cv_ptr->image;
+//    std_msgs::String debug_msg;
+//    debug_msg.data = message;
 
-//    char str[200];
-//    sprintf( str, "TRACKING");
-//    putText( output_image_, str, cv::Point(output_image_.rows/2,output_image_.cols/2), cv::FONT_HERSHEY_PLAIN, 2,  cv::Scalar(0,255,0), 3, 8, false );
-
-//    cv_ptr->image = output_image_;
-
-//    image_pub_.publish(cv_ptr->toImageMsg());
-
-//    cv::imshow( "Frame", output_image_ );
-
-
-//    cv_ptr->image = output_image_;
-//    image_pub_.publish(cv_ptr->toImageMsg());
-
-
-//     if (count_ % skip_val == 0 ) {
-//         faceTracker.trackLandmark(cv_ptr->image,output_image_,message);
-//         cv_ptr->image = output_image_;
-//         image_pub_.publish(cv_ptr->toImageMsg());
-//     }
-//     else image_pub_.publish(cv_ptr->toImageMsg());
-
-//    faceTracker.trackLandmark(cv_ptr->image,output_image_,message);
-//    cv_ptr->image = output_image_;
-//    image_pub_.publish(cv_ptr->toImageMsg());
-
-    std_msgs::String debug_msg;
-    debug_msg.data = message;
-
-    debug_msg_pub_.publish(debug_msg);
+//    debug_msg_pub_.publish(debug_msg);
 }
 
 void ROSFaceDetection::getEllipseCenter(){
+    cv::RotatedRect minEllipse = faceTracker.requestEllipseCenter();
+    img_points.point.x = minEllipse.center.x;
+    img_points.point.y = minEllipse.center.y;
+    img_points_.publish(img_points);
+}
 
+void ROSFaceDetection::moveBase(){
+    std::map<std::__cxx11::string,bool> move_base_data;
+    move_base_data = faceTracker.moveBase();
+
+    if(move_base_data["MOVE_BASE"] != currentMoveBase){
+        face_detection::MoveBase moveBaseMsg;
+        moveBaseMsg.move_base = move_base_data["MOVE_BASE"];
+        moveBaseMsg.turn_left = move_base_data["TURN_LEFT"];
+        currentMoveBase = move_base_data["MOVE_BASE"];
+        move_base_pub_.publish(moveBaseMsg);
+    }
 }
 
 

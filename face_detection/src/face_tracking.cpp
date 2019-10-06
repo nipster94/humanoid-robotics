@@ -2,14 +2,18 @@
 
 FaceTracking::FaceTracking(){
     face_found = false;
+    move_base = false;
+    turnLeft = false;
 }
 
-void FaceTracking::initialize(std::__cxx11::string path_){
+void FaceTracking::initialize(std::__cxx11::string path_,
+                              std::map<std::string, int> &param_){
+
     detector = dlib::get_frontal_face_detector();
-
-    std::cout << path_ << std::endl;    
-
     dlib::deserialize(path_) >> pose_model;
+
+    RANGE_FOR_DETECTED = param_["RANGE_FOR_DETECTED"];
+    RANGE_FOR_TRACKING= param_["RANGE_FOR_TRACKING"];
 }
 
 void FaceTracking::trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_,std::string message){
@@ -17,61 +21,30 @@ void FaceTracking::trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_,s
       dlib::cv_image<dlib::bgr_pixel> cimg(image_);
       std::vector<dlib::rectangle> cfaces;
 
-//      std::cout << "testing..." << std::endl;
-//      std::string message_;
-//      message_ = "In the tracking loop";
-
       int tracking_index;
       std::vector<dlib::rectangle> faces = detector(cimg);
 
-      char str[200];
-      sprintf( str, "TRACKING 2");
-      putText( image_, str, cv::Point(image_.rows/2,image_.cols/2), cv::FONT_HERSHEY_PLAIN, 2,  cv::Scalar(0,255,0), 3, 8, false );
+      if( faces.size() > 0 ){
+          face_found = true;
+          if( ground_truth.size() > 0 ) tracking_index = getTrackingIndex(cimg,faces);
+          cfaces = getCloseFaces(faces,tracking_index);
 
-//      if( faces.size() > 0 ){
+          if( cfaces.size() > 0 ){
+              cv::vector< cv::vector<cv::Point> > all_land_mark;
+              cv::vector< cv::vector<cv::Point> > jaw_line;
+              int max_area_index;
 
-//          std::cout << "found faces" << std::endl;
+              getMaxAreaIndex(cimg,cfaces,all_land_mark,jaw_line,max_area_index);
+              startTracking(image_,cfaces,all_land_mark,jaw_line,max_area_index);
+          }
+      }
 
-//          face_found = true;
-//          if( ground_truth.size() > 0 ) tracking_index = getTrackingIndex(cimg,faces);
-//          cfaces = getCloseFaces(faces,tracking_index);
+      else{
+              face_found = false;
+      }
 
-//          if(cfaces.size() > 0){
-
-//              cv::vector< cv::vector<cv::Point> > all_land_mark;
-//              cv::vector< cv::vector<cv::Point> > jaw_line;
-//              int max_area_index;
-//              message_ = "cfaces are higer than 0 : " + std::to_string(cfaces.size());
-//              std::cout << "cfaces are higer than 0 " << std::endl;
-//              getMaxAreaIndex(cimg,cfaces,all_land_mark,jaw_line,max_area_index);
-//              startTracking(image_,cfaces,all_land_mark,jaw_line,max_area_index);
-//          }
-
-//          else
-//          {
-//              message_ = "Error with cfaces ";
-//              std::cout << "Error with cfaces" << std::endl;
-//          }
-          
-////          if( cfaces.size() > 0 ){
-////              cv::vector< cv::vector<cv::Point> > all_land_mark;
-////              cv::vector< cv::vector<cv::Point> > jaw_line;
-////              int max_area_index;
-
-
-////          }
-//      }
-
-//      else{
-//              face_found = false;
-//              message_ = "Error with faces ";
-//              std::cout << "did not found faces" << std::endl;
-//      }
-
-//      cfacesize = cfaces.size();
+      cfacesize = cfaces.size();
       output_image_ = image_;
-//      message = message_;
-      std::cout << "===============" << std::endl;
 }
 
 int FaceTracking::getTrackingIndex(dlib::cv_image<dlib::bgr_pixel> img_, std::vector<dlib::rectangle> faces_){
@@ -106,8 +79,6 @@ std::vector<dlib::rectangle> FaceTracking::getCloseFaces(std::vector<dlib::recta
     std::vector<dlib::rectangle> cfaces;
     for( int i = 0; i < faces_.size(); i++ )
     {
-//        cfaces.push_back(faces_[i]);
-
         if(faces_[i].height() > RANGE_FOR_TRACKING && i == tracking_index ){
             cfaces.push_back(faces_[i]);
         }
@@ -197,8 +168,6 @@ void FaceTracking::startTracking(cv::Mat &image_,
         std::vector<float>::iterator result = std::min_element( RMSE_R.begin(), RMSE_R.end() );
         min_index = std::distance( RMSE_R.begin(), result );
 
-
-
        cv::Rect cvface;
        cv::Point temp_predicted;
        temp_predicted.x = 24;
@@ -218,30 +187,39 @@ void FaceTracking::startTracking(cv::Mat &image_,
        int endPointA = faceNewLeft + faceSize;
        int endPointB = faceNewTop + faceSize;
 
-       if(endPointA <= image_.cols && endPointB <= image_.rows){
+       cv::RotatedRect minEllipse_;
+       minEllipse_ = cv::fitEllipse(jaw_line[min_index]);
+
+       if(minEllipse_.center.x <= 150){
+           cv::Rect rect_(0, faceNewTop, faceSize, faceSize);
+           cv::rectangle(image_, rect_, cv::Scalar(0, 0, 255),2,8,0);
+           move_base = true;
+           turnLeft = false;
+       }
+       else if(endPointA <= image_.cols && endPointB <= image_.rows){
            cv::Rect rect(faceNewLeft, faceNewTop, faceSize, faceSize);
            cv::rectangle(image_, rect, cv::Scalar(255, 0, 0),2,8,0);
            cvface.x = faceNewLeft;
            cvface.y = faceNewTop;
            cvface.width = faceSize;
            cvface.height = faceSize;
-        }
-
+           move_base = false;
+       }
        else{
            int errorLeft,errorTop;
            if(endPointA >= image_.cols) errorLeft = endPointA - image_.cols;
            if(endPointB >= image_.rows) errorTop = endPointB - image_.rows;
            cv::Rect rect_((faceNewLeft - errorLeft), (faceNewTop - errorTop), faceSize, faceSize);
            cv::rectangle(image_, rect_, cv::Scalar(0, 0, 255),2,8,0);
+           move_base = true;
+           turnLeft = true;
        }
 
         std::string tempStr = std::to_string(min_index);
 
-        cv::RotatedRect minEllipse_;
-        minEllipse_ = cv::fitEllipse(jaw_line[min_index]);
+
         char str[200];
 
-        char temp = min_index;
         sprintf( str, "TRACKING");
         putText( image_, str, minEllipse_.center, cv::FONT_HERSHEY_PLAIN, 2,  cv::Scalar(0,255,0), 3, 8, false );
 
@@ -250,6 +228,8 @@ void FaceTracking::startTracking(cv::Mat &image_,
             minEllipse_.center.x <= 640 &&
             minEllipse_.center.y >= 0 &&
             minEllipse_.center.x <= 480 ) minEllipse = minEllipse_;
+
+
 
         state = Updating;
     }
@@ -272,4 +252,16 @@ int FaceTracking::requestFacesSize(){
 
 cv::RotatedRect FaceTracking::requestEllipseCenter(){
     return minEllipse;
+}
+
+//bool FaceTracking::moveBase(){
+//    return move_base;
+//}
+
+std::map<std::__cxx11::string, bool> FaceTracking::moveBase()
+{
+    std::map<std::__cxx11::string,bool> move_base_data;
+    move_base_data["MOVE_BASE"] = move_base;
+    move_base_data["TURN_LEFT"] = turnLeft;
+    return move_base_data;
 }

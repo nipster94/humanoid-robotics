@@ -39,16 +39,18 @@ class FaceTracking
 //        void initialize(std::string path_,
 //                        std::map<std::string , int> &param_ );
 
-        void initialize(std::string path_ );
+        void initialize(std::string path_ , std::map<std::__cxx11::string, int> &param_);
 
         void trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_, std::string message);
 
         cv::RotatedRect requestEllipseCenter();
         bool requestDetectedRealTime();
         int requestFacesSize();
+//        bool moveBase();
+        std::map<std::__cxx11::string, bool> moveBase();
 
     private:
-
+        bool turnLeft;
         int cfacesize = 0;                          /**< Number of close faces detected */
         int CHECK_PERSON_DETECTED;                  /**< TODO */
         int CHECK_PERSON_DISAPPEAR;                 /**< TODO */
@@ -60,6 +62,8 @@ class FaceTracking
         std::vector<cv::Point> ground_truth;        /**< Ground truth */
         dlib::frontal_face_detector detector;       /**< Dlib - face landmark detection */
         dlib::shape_predictor pose_model;           /**< Dlib - pose model for face landmark detection */
+        bool move_base;
+
 
         float calculateArea(float semi_major_axis, float semi_minor_axis);
         float RMSE( std::vector<cv::Point> ground_truth, std::vector<cv::Point> fitted_shapes);
@@ -76,7 +80,7 @@ class FaceTracking
                            cv::vector<cv::vector<cv::Point>> &jaw_line,
                            int &max_area_index);
 
-        void getEllipseCenter();
+
 
 };
 

@@ -39,3 +39,7 @@ CMakeLists.txt
 
 #pychram
 *.idea/
+
+#qt-files
+face_detection-build
+CMakeLists.txt.user
