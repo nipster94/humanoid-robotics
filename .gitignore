@@ -42,4 +42,5 @@ CMakeLists.txt
 
 #qt-files
 face_detection-build
+brain-build
 CMakeLists.txt.user
