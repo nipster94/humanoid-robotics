@@ -35,7 +35,7 @@
 Extra
 
 #CMakeList.txt from catkin_make
-CMakeLists.txt
+/CMakeLists.txt
 
 #pychram
 *.idea/
