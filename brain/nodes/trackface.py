@@ -10,7 +10,7 @@ class ConvertCoordinates():
     def __init__(self):
         rospy.init_node('ConvertCoordinates')
 
-        rospy.Subscriber('/face_detection/img_points',Face, self.target_callback)
+        rospy.Subscriber('/face_detection/img_location',Face, self.target_callback)
         rospy.Subscriber('/face_detection/move_base',MoveBase,self.move_base_callback)
         self.neck_angle_pub = rospy.Publisher("/servo_neck", UInt16MultiArray, queue_size=1)
         self.body_angle_pub = rospy.Publisher("/servo_body", UInt16, queue_size=1)

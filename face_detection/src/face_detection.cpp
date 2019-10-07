@@ -15,11 +15,10 @@ ROSFaceDetection::ROSFaceDetection():
     image_sub_ = it_.subscribe("/camera/color/image_raw", 1, &ROSFaceDetection::imageCallBack,this);
     image_pub_ = it_.advertise("/face_tracking/output_video", 1);
 
-    img_points_ = nh_.advertise<geometry_msgs::PointStamped>("face_detection/img_points", 1);
+    img_location_ = nh_.advertise<face_detection::Face>("face_detection/img_location", 1);
     move_base_pub_ = nh_.advertise<face_detection::MoveBase>("face_detection/move_base",1);
     face_found_pub_ = nh_.advertise<std_msgs::Bool>("face_detection/face_found",1);
 
- 
     ros::param::get("~SKIP_FRAMES",params["SKIP_FRAMES"]);
     ros::param::get("~RANGE_FOR_DETECTED", params["RANGE_FOR_DETECTED"]);
     ros::param::get("~RANGE_FOR_TRACKING", params["RANGE_FOR_TRACKING"]);
@@ -61,9 +60,15 @@ void ROSFaceDetection::imageCallBack(const sensor_msgs::ImageConstPtr &msg){
 
 void ROSFaceDetection::getEllipseCenter(){
     cv::RotatedRect minEllipse = faceTracker.requestEllipseCenter();
-    img_points.point.x = minEllipse.center.x;
-    img_points.point.y = minEllipse.center.y;
-    img_points_.publish(img_points);
+    face_detection::Face img_location;
+
+    img_location.point.x = minEllipse.center.x;
+    img_location.point.y = minEllipse.center.y;
+
+    img_location.height =  minEllipse.size.height;
+    img_location.width = minEllipse.size.width;
+
+    img_location_.publish(img_location);
 }
 
 void ROSFaceDetection::moveBase(){

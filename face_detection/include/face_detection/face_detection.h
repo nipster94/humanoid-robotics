@@ -18,6 +18,7 @@
 #include <geometry_msgs/PointStamped.h>
 #include <std_msgs/Bool.h>
 #include "face_detection/MoveBase.h"
+#include "face_detection/Face.h"
 
 class ROSFaceDetection
 {
@@ -32,7 +33,7 @@ class ROSFaceDetection
         int count_ = 0;
         bool currentMoveBase = true;
         ros::NodeHandle nh_;                        /**< ROS node handler */
-        geometry_msgs::PointStamped img_points;
+
 
         image_transport::ImageTransport it_;        /**< This is used to subscribe to and publish images. In other words, this work as a node handler for images */
 
@@ -40,7 +41,7 @@ class ROSFaceDetection
         image_transport::Publisher image_pub_;      /**< This is the image publisher(will publish to the system) */
 
         ros::Publisher debug_msg_pub_;
-        ros::Publisher img_points_;
+        ros::Publisher img_location_;
         ros::Publisher move_base_pub_;
         ros::Publisher face_found_pub_;
         geometry_msgs::PointStamped valPoints;      /**< Point x and y of the ellipse center */
