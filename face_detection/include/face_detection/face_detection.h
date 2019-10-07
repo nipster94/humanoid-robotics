@@ -19,8 +19,6 @@
 #include <std_msgs/Bool.h>
 #include "face_detection/MoveBase.h"
 
-
-
 class ROSFaceDetection
 {
     public:
@@ -44,6 +42,7 @@ class ROSFaceDetection
         ros::Publisher debug_msg_pub_;
         ros::Publisher img_points_;
         ros::Publisher move_base_pub_;
+        ros::Publisher face_found_pub_;
         geometry_msgs::PointStamped valPoints;      /**< Point x and y of the ellipse center */
         std_msgs::Int32 detection_flag;             /**< TODO */
         std_msgs::Int32 detection_flag_real_time;   /**< Status of the real time face detection (0 - Not detected 1 - Detected) */
@@ -58,6 +57,8 @@ class ROSFaceDetection
         void getEllipseCenter();
 
         void moveBase();
+
+        void faceFound();
 
 };
 

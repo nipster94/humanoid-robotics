@@ -4,17 +4,16 @@ import rospkg
 import math
 from std_msgs.msg import UInt16,UInt16MultiArray
 from geometry_msgs.msg import PointStamped
-from face_detection.msg import MoveBase
+from face_detection.msg import MoveBase,Face
 
 class ConvertCoordinates():
     def __init__(self):
         rospy.init_node('ConvertCoordinates')
 
-        rospy.Subscriber('/face_detection/img_points',PointStamped, self.target_callback)
+        rospy.Subscriber('/face_detection/img_points',Face, self.target_callback)
         rospy.Subscriber('/face_detection/move_base',MoveBase,self.move_base_callback)
         self.neck_angle_pub = rospy.Publisher("/servo_neck", UInt16MultiArray, queue_size=1)
         self.body_angle_pub = rospy.Publisher("/servo_body", UInt16, queue_size=1)
-
 
         self.neck_angles = []
         self.current_angle_x = 0
@@ -35,8 +34,8 @@ class ConvertCoordinates():
     def target_callback(self,data):
         x = data.point.x
         y = data.point.y
-        w = 1
-        h = 1
+        w = data.height
+        h = data.width
         self.current_angle_x, self.current_angle_y, distance = self.trackface(x,y,w,h)
 
         if self.init:

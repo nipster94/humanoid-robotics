@@ -4,17 +4,21 @@ ROSFaceDetection::ROSFaceDetection():
  it_(nh_)
 {
     std::string pkg_ = "face_detection";
-//    std::string ros_path_ = ros::package::getPath("face_detection_ws");
-//    ros_path_.erase(ros_path_.find(pkg_), pkg_.size());
+    std::string ros_path_2 = ros::package::getPath("face_detection");
+    ros_path_2.erase(ros_path_2.find(pkg_), pkg_.size());
+
+    std::cout << ros_path_2 << std::endl;
+
 //    std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/face_detection/shape_predictor_68_face_landmarks.dat";
     std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/Extra/shape_predictor_68_face_landmarks.dat";
 
     image_sub_ = it_.subscribe("/camera/color/image_raw", 1, &ROSFaceDetection::imageCallBack,this);
     image_pub_ = it_.advertise("/face_tracking/output_video", 1);
 
-    debug_msg_pub_ = nh_.advertise<std_msgs::String>("debug_msg", 1);
     img_points_ = nh_.advertise<geometry_msgs::PointStamped>("face_detection/img_points", 1);
     move_base_pub_ = nh_.advertise<face_detection::MoveBase>("face_detection/move_base",1);
+    face_found_pub_ = nh_.advertise<std_msgs::Bool>("face_detection/face_found",1);
+
  
     ros::param::get("~SKIP_FRAMES",params["SKIP_FRAMES"]);
     ros::param::get("~RANGE_FOR_DETECTED", params["RANGE_FOR_DETECTED"]);
@@ -29,6 +33,7 @@ void ROSFaceDetection::execute(){
     while (ros::ok()) {
        getEllipseCenter();
        moveBase();
+       faceFound();
        count_++;
        if (count_ > 1000) count_ = 0;
        rate.sleep();
@@ -45,19 +50,13 @@ void ROSFaceDetection::imageCallBack(const sensor_msgs::ImageConstPtr &msg){
     }
 
     cv::Mat output_image_;
-    std::string message;
 
     if(count_ % params["SKIP_FRAMES"] == 0){
-        faceTracker.trackLandmark(cv_ptr->image,output_image_,message);
+        faceTracker.trackLandmark(cv_ptr->image,output_image_);
         cv_ptr->image = output_image_;
         image_pub_.publish(cv_ptr->toImageMsg());
     }
     else image_pub_.publish(cv_ptr->toImageMsg());
-
-//    std_msgs::String debug_msg;
-//    debug_msg.data = message;
-
-//    debug_msg_pub_.publish(debug_msg);
 }
 
 void ROSFaceDetection::getEllipseCenter(){
@@ -79,6 +78,14 @@ void ROSFaceDetection::moveBase(){
         move_base_pub_.publish(moveBaseMsg);
     }
 }
+
+void ROSFaceDetection::faceFound(){
+    std_msgs::Bool faceFoundMsg;
+    faceFoundMsg.data = faceTracker.requestDetectedRealTime();
+    face_found_pub_.publish(faceFoundMsg);
+}
+
+
 
 
 

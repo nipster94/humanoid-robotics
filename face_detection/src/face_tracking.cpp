@@ -16,7 +16,7 @@ void FaceTracking::initialize(std::__cxx11::string path_,
     RANGE_FOR_TRACKING= param_["RANGE_FOR_TRACKING"];
 }
 
-void FaceTracking::trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_,std::string message){
+void FaceTracking::trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_){
       cv::Mat image_ = input_image_;
       dlib::cv_image<dlib::bgr_pixel> cimg(image_);
       std::vector<dlib::rectangle> cfaces;

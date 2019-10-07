@@ -36,17 +36,13 @@ class FaceTracking
              Updating /*!< Update ground truth */
         };
 
-//        void initialize(std::string path_,
-//                        std::map<std::string , int> &param_ );
-
         void initialize(std::string path_ , std::map<std::__cxx11::string, int> &param_);
 
-        void trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_, std::string message);
+        void trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_);
 
         cv::RotatedRect requestEllipseCenter();
         bool requestDetectedRealTime();
         int requestFacesSize();
-//        bool moveBase();
         std::map<std::__cxx11::string, bool> moveBase();
 
     private:
