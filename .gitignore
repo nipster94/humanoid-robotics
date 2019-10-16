@@ -30,3 +30,19 @@
 *.exe
 *.out
 *.app
+
+#shape predictor and Other file
+Extra
+
+#CMakeList.txt from catkin_make
+/CMakeLists.txt
+
+#pychram
+*.idea/
+
+#qt-files
+*-build
+face_detection-build
+brain-build
+CMakeLists.txt.user
+
