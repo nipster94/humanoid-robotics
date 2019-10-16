@@ -62,11 +62,11 @@ void ROSFaceDetection::getEllipseCenter(){
     cv::RotatedRect minEllipse = faceTracker.requestEllipseCenter();
     face_detection::Face img_location;
 
-    img_location.point.x = minEllipse.center.x;
-    img_location.point.y = minEllipse.center.y;
+    img_location.point.point.x = minEllipse.center.x;
+    img_location.point.point.y = minEllipse.center.y;
 
-    img_location.height =  minEllipse.size.height;
-    img_location.width = minEllipse.size.width;
+    img_location.height.data = minEllipse.size.height;
+    img_location.width.data = minEllipse.size.width;
 
     img_location_.publish(img_location);
 }
