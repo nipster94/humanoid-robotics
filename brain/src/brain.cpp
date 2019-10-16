@@ -33,7 +33,7 @@ HubertBrain::HubertBrain():
 //    ROS_INFO("Spinner enabled");
 
     pan_tilt_lb = 60;
-    pan_tilt_ub = 150;
+    pan_tilt_ub = 120;
 
     body_lb = 60;
     body_ub = 120;
@@ -68,6 +68,11 @@ void HubertBrain::faceFoundCallback(const std_msgs::Bool &msg){
         previous_face_found = face_found;
     }
 }
+
+std::list<int> HubertBrain::getPanTiltAngles(int lb, int ub, int stepSize){
+
+}
+
 
 void HubertBrain::idlingLoop(){
     
