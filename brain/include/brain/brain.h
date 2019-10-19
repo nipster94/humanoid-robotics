@@ -33,10 +33,19 @@ class HubertBrain
         ros::Publisher neck_loop_;
         ros::Publisher body_loop_;
 
+        ros::Publisher say_hello_;
+        ros::Publisher start_interrogation_;
+
         int pan_tilt_ub;
         int body_ub;
         int pan_tilt_lb;
         int body_lb;
+        int pan_tilt_step_size;
+        int body_step_size;
+        int ppl_passby_count;
+
+        std::vector<uint> panAngles_;
+        std::vector<uint> tiltAngles_;
 
         RobotState robotState = Idling;
         bool face_found;
@@ -45,10 +54,13 @@ class HubertBrain
 
         void checkRobotStates();
         void idlingLoop();
+        void trackingStateLoop();
 
         void faceFoundCallback(const std_msgs::Bool &msg);
 
-        std::list<uint> getPanTiltAngles(int lb, int ub, int stepSize);
+//        std::list<uint> getPanTiltAngles(int lb, int ub, int stepSize);
+        std::vector<uint> getPanAngles(int lb, int ub, int stepSize);
+        std::vector<uint> getTiltAngles(int lb, int ub, int stepSize);
         std::list<uint> getBodyAngles(int lb, int ub, int stepSize){}
 
 
