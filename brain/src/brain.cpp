@@ -6,20 +6,28 @@ HubertBrain::HubertBrain():
     face_found = false;
     previous_face_found = false;
 
-    neck_loop_= nh_.advertise<std_msgs::UInt16MultiArray>("/hubert_brain/servo_neck",1);
-    body_loop_ = nh_.advertise<std_msgs::UInt16>("/hubert_brain/servo_body",1);
+//    neck_loop_= nh_.advertise<std_msgs::UInt16MultiArray>("/hubert_brain/servo_neck",1);
+//    body_loop_ = nh_.advertise<std_msgs::UInt16>("/hubert_brain/servo_body",1);
 
-    // neck_loop_= nh_.advertise<std_msgs::UInt16MultiArray>("/servo_neck",1);
-    // body_loop_ = nh_.advertise<std_msgs::UInt16>("/servo_body",1);
+    neck_loop_= nh_.advertise<std_msgs::UInt16MultiArray>("/servo_neck",1);
+    body_loop_ = nh_.advertise<std_msgs::UInt16>("/servo_body",1);
     
     say_hello_ = nh_.advertise<std_msgs::Bool>("/hubert_brain/say_hello",1);
     start_interrogation_ = nh_.advertise<std_msgs::Bool>("/hubert_brain/start_interrogation",1);
+    access_details_ = nh_.advertise<brain::Access>("/hubert_brain/access_details",1);
     
     face_found_sub = nh_.subscribe("/face_detection/face_found", 1, &HubertBrain::faceFoundCallback,this);
 
-    pan_tilt_lb = 30;
-    pan_tilt_ub = 150;
-    pan_tilt_step_size = 15;
+    treminalClient = nh_.serviceClient<brain::RequestTreminal>("/hubert_brain/treminal");
+
+
+    ros::param::get("~PAN_LB",pan_lb);
+    ros::param::get("~PAN_UB", pan_ub);
+    ros::param::get("~PAN_STEP_SIZE", pan_step_size);
+
+    ros::param::get("~TILT_LB",tilt_lb);
+    ros::param::get("~TILT_UB", tilt_ub);
+    ros::param::get("~TILT_STEP_SIZE", tilt_step_size);
 
     body_lb = 60;
     body_ub = 120;
@@ -31,8 +39,8 @@ HubertBrain::HubertBrain():
 void HubertBrain::execute(){
     ROS_INFO("STARTING HUBERT BRAIN!!!");
     ros::Rate rate(10);
-    panAngles_ = getPanAngles(pan_tilt_lb,pan_tilt_ub,pan_tilt_step_size);
-    tiltAngles_ = getTiltAngles(pan_tilt_lb,pan_tilt_ub,pan_tilt_step_size);
+    panAngles_ = getPanAngles(pan_lb,pan_ub,pan_step_size);
+    tiltAngles_ = getTiltAngles(tilt_lb,tilt_ub,tilt_step_size);
     while(ros::ok()){
         checkRobotStates();
         rate.sleep();
@@ -41,15 +49,16 @@ void HubertBrain::execute(){
 }
 
 void HubertBrain::faceFoundCallback(const std_msgs::Bool &msg){
-    ROS_INFO("GOT FACE FOUND");
     face_found = msg.data;
     if(face_found != previous_face_found){ 
+        ROS_INFO("Face detection state changed");
         if(robotState == RobotState::Idling){
             robotState = RobotState::Tracking;
             state_changed = true;
         }
-        else if (robotState == RobotState::Tracking && face_found){
+        else if (robotState == RobotState::Tracking && face_found){           
             ppl_passby_count += 1;
+            ROS_INFO("PEOPLE FOUND %d",ppl_passby_count);
         }
 
         previous_face_found = face_found;
@@ -132,7 +141,8 @@ std::vector<uint> HubertBrain::getTiltAngles(int lb, int ub, int stepSize){
 
 
 void HubertBrain::idlingLoop(){
-    int count = 0;
+    int pan_count = 0;
+    int tilt_count = 0;
     
     ros::AsyncSpinner spinner(1);
     ros::Rate spinnerRate(0.5);
@@ -141,20 +151,22 @@ void HubertBrain::idlingLoop(){
         std_msgs::UInt16MultiArray neck_msg;
         std_msgs::UInt16 body_msg;
 
-        count = count == panAngles_.size() ? 0 : count;
+        pan_count = pan_count == panAngles_.size() ? 0 : pan_count;
+        tilt_count = tilt_count == tiltAngles_.size() ? 0 : tilt_count;
 
-        neck_msg.data.push_back(tiltAngles_[count]);
-        neck_msg.data.push_back(panAngles_[count]);
+        neck_msg.data.push_back(panAngles_[pan_count]);
+        neck_msg.data.push_back(tiltAngles_[tilt_count]);
 
 //        body_msg.data = body;
         neck_loop_.publish(neck_msg);
 //        body_loop_.publish(body_msg);
 
-        ROS_INFO("PUBLISHING ANGLE %d",tiltAngles_[count]);
+        ROS_INFO("PUBLISHING ANGLES %d, %d", panAngles_[pan_count], tiltAngles_[tilt_count]);
         spinnerRate.sleep();
         ROS_INFO("DONE WAITING.....");
 
-        count++;
+        pan_count++;
+        tilt_count++;
     }
     ROS_INFO("STOPING IDLING LOOP.....");
     spinner.stop();
@@ -163,6 +175,8 @@ void HubertBrain::idlingLoop(){
 void HubertBrain::trackingStateLoop(){
     ros::AsyncSpinner spinner(1);
     ros::Rate spinnerRate(0.1);
+
+    ROS_INFO("IN THE TRACKING STATE");
     
     if(face_found) {
         std_msgs::Bool hello_msg;
@@ -173,17 +187,43 @@ void HubertBrain::trackingStateLoop(){
     spinner.start();
     spinnerRate.sleep();
 
+    ROS_INFO("TRACKING FINISHED");
+
     if(face_found && ppl_passby_count == 0){
         std_msgs::Bool interrogateMsg;
         interrogateMsg.data = true;
         start_interrogation_.publish(interrogateMsg);
         robotState = RobotState::Interrogation;
+
+        //Need to wait for few seconds until language processing
+        //part finishes its sentence
+
+        ros::Duration(10).sleep();
+
+
     }
     else if (face_found && ppl_passby_count > 0) {
         ppl_passby_count = 0;
     }
 
     spinner.stop();
+}
+
+void HubertBrain::handleInterrogation(){
+     brain::RequestTreminal treminalService;
+     treminalService.request.open_terminal = true;
+
+     if(treminalClient.call(treminalService)){
+        brain::Access accessMsg;
+        accessMsg.access_granted = treminalService.response.access;
+        accessMsg.user_name = treminalService.response.name;
+        access_details_.publish(accessMsg);
+     }
+     else{
+         ROS_ERROR("Failed to call treminal service");
+     }
+
+     robotState = RobotState::DecisionMaking;
 }
 
 
@@ -195,10 +235,10 @@ void HubertBrain::checkRobotStates(){
         trackingStateLoop();
     }
     else if(robotState == RobotState::Interrogation){
-        //open treminal application
+        handleInterrogation();
     }
-    else{
-
+    else if(robotState == RobotState::DecisionMaking){
+        ROS_WARN("TAKING A DECISION");
     }
 
 }

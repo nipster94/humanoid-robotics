@@ -1,0 +1,10 @@
+users:
+  - user_name: user_1
+    credentials:
+      name: first user
+      password: asd
+  - user_name: user_2
+    credentials:
+      name: second user
+      password: asd
+

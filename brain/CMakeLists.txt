@@ -17,6 +17,16 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
+add_service_files(DIRECTORY srv
+  FILES
+  RequestTreminal.srv
+)
+
+add_message_files(DIRECTORY msg
+   FILES
+   Access.msg
+)
+
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
    DEPENDENCIES
@@ -37,4 +47,4 @@ include_directories(include/brain
 
 add_executable(hubert_brain src/brain_node.cpp src/brain.cpp)
 target_link_libraries(hubert_brain ${catkin_LIBRARIES})
-add_dependencies(hubert_brain ${catkin_EXPORTED_TARGETS})
+add_dependencies(hubert_brain brain_generate_messages_cpp ${catkin_EXPORTED_TARGETS})

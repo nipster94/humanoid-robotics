@@ -1,0 +1,4 @@
+bool open_terminal
+---
+bool access
+string name

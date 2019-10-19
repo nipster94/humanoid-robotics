@@ -7,6 +7,8 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/UInt16.h>
 #include <std_msgs/UInt16MultiArray.h>
+#include "brain/RequestTreminal.h"
+#include "brain/Access.h"
 
 class HubertBrain
 {
@@ -35,12 +37,22 @@ class HubertBrain
 
         ros::Publisher say_hello_;
         ros::Publisher start_interrogation_;
+        ros::Publisher access_details_;
 
-        int pan_tilt_ub;
+        ros::ServiceClient treminalClient;
+
+
+        int pan_ub;
+        int pan_lb;
+        int pan_step_size;
+
+        int tilt_ub;
+        int tilt_lb;
+        int tilt_step_size;
+
+
         int body_ub;
-        int pan_tilt_lb;
         int body_lb;
-        int pan_tilt_step_size;
         int body_step_size;
         int ppl_passby_count;
 
@@ -55,6 +67,7 @@ class HubertBrain
         void checkRobotStates();
         void idlingLoop();
         void trackingStateLoop();
+        void handleInterrogation();
 
         void faceFoundCallback(const std_msgs::Bool &msg);
 

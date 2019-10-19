@@ -53,8 +53,8 @@ class AgentMain():
         if(data.data):
             rospy.loginfo("START INTERROGATION")
             self.got_data = True
-            startContext = self.agent.getDialogList()[2].getContext()
-            startID = self.agent.getDialogList()[2].getDialogItemList()[0].getID()
+            startContext = self.agent.getDialogList()[1].getContext()
+            startID = self.agent.getDialogList()[1].getDialogItemList()[0].getID()
             self.agent.start(startContext, startID)
             self.got_data = False
 
@@ -84,7 +84,7 @@ class AgentMain():
         itemI1.setOutputAction(outputAction)
         dialogItemList.append(itemI1)
 
-        waitingTime = 5.0
+        waitingTime = 2.0
         itemI2 = WaitItem('I2', waitingTime)
         outputAction = OutputAction('Interrogation', 'I3')
         itemI2.setOutputAction(outputAction)
@@ -122,7 +122,7 @@ class AgentMain():
 
         itemWD1 = OutputItem('WD1')
         outputAction = OutputAction('', '')
-        pattern = Pattern('Welcome.')
+        pattern = Pattern('Welcome')
         outputAction.setPattern(pattern)
         itemWD1.setOutputAction(outputAction)
         dialogItemList.append(itemWD1)

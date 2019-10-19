@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch> 	
+	<node pkg="brain" type="hubert_brain" name="hubert_brain" output="screen">		
+		<param name="PAN_LB" value="30" /> 		
+		<param name="PAN_UB" value="150" />  		
+		<param name="PAN_STEP_SIZE" value="15" />
+		<param name="TILT_LB" value="70" /> 		
+		<param name="TILT_UB" value="110" />  		
+		<param name="TILT_STEP_SIZE" value="10" />
+	</node>
+</launch>
