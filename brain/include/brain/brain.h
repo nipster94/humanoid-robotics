@@ -49,7 +49,7 @@ class HubertBrain
         void faceFoundCallback(const std_msgs::Bool &msg);
 
         std::list<uint> getPanTiltAngles(int lb, int ub, int stepSize);
-        std::list<uint> getBodyAngles(int lb, int ub, int stepSize);
+        std::list<uint> getBodyAngles(int lb, int ub, int stepSize){}
 
 
 };

@@ -6,14 +6,14 @@ from std_msgs.msg import UInt16,UInt16MultiArray
 from geometry_msgs.msg import PointStamped
 from face_detection.msg import MoveBase,Face
 
-class ConvertCoordinates():
+class FaceTracker():
     def __init__(self):
         rospy.init_node('ConvertCoordinates')
 
         rospy.Subscriber('/face_detection/img_location',Face, self.target_callback)
         rospy.Subscriber('/face_detection/move_base',MoveBase,self.move_base_callback)
-        self.neck_angle_pub = rospy.Publisher("/servo_neck", UInt16MultiArray, queue_size=1)
-        self.body_angle_pub = rospy.Publisher("/servo_body", UInt16, queue_size=1)
+        self.neck_angle_pub = rospy.Publisher("/face_tracker/servo_neck", UInt16MultiArray, queue_size=1)
+        self.body_angle_pub = rospy.Publisher("/face_tracker/servo_body", UInt16, queue_size=1)
 
         self.neck_angles = []
         self.current_angle_x = 0
@@ -98,7 +98,7 @@ class ConvertCoordinates():
 
 
 if __name__ == '__main__':
-    ConvertCoordinates()
+    FaceTracker()
 
     
     

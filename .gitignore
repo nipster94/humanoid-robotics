@@ -41,6 +41,5 @@ Extra
 *.idea/
 
 #qt-files
-face_detection-build
-brain-build
+*-build
 CMakeLists.txt.user

@@ -13,8 +13,8 @@ HubertBrain::HubertBrain():
 
 
 
-    neck_loop_= nh_.advertise<std_msgs::UInt16MultiArray>("/servo_neck",1);
-    body_loop_ = nh_.advertise<std_msgs::UInt16>("/servo_body",1);
+    neck_loop_= nh_.advertise<std_msgs::UInt16MultiArray>("/hubert_brain/servo_neck",1);
+    body_loop_ = nh_.advertise<std_msgs::UInt16>("/hubert_brain/servo_body",1);
 
     face_found_sub = nh_.subscribe("/face_detection/face_found", 1, &HubertBrain::faceFoundCallback,this);
 
@@ -69,7 +69,7 @@ void HubertBrain::faceFoundCallback(const std_msgs::Bool &msg){
     }
 }
 
-std::list<int> HubertBrain::getPanTiltAngles(int lb, int ub, int stepSize){
+std::list<uint> HubertBrain::getPanTiltAngles(int lb, int ub, int stepSize){
 
 }
 
