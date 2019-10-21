@@ -2,6 +2,7 @@
 import rospy
 import rospkg
 from brain.srv import RequestTreminal,RequestTreminalResponse
+from brain.msg import Feedback
 
 import yaml
 import six
@@ -21,7 +22,9 @@ class HandleTreminal():
         self.initialPoint = True
         path = rospack.get_path('brain') + '/resources/users.yaml'
 
-        self.terminalService = rospy.Service('/hubert_brain/treminal',RequestTreminal,self.handle_terminal_service)
+        self.terminalService = rospy.Service('/hubert_brain/terminal',RequestTreminal,self.handle_terminal_service)
+
+        self.feedback_pub = rospy.Publisher('/hubert_brain/feedback',Feedback,queue_size=1)
 
         self.data = self.read_yaml(path)
         self.interrogationDone = False
@@ -88,25 +91,37 @@ class HandleTreminal():
         self.log(question_1, color="white")
 
         user_name = raw_input()
-        no_of_attempts = 0
+        no_of_attempts = 1
         access_granted = False
         got_usr_name = False
         user_index = 0
 
-        while (not access_granted and not no_of_attempts > 3):
+        while (not access_granted and not no_of_attempts >=3):
+            print no_of_attempts
             if(got_usr_name):
                 pswd = getpass.getpass('Please enter your PASSWORD:')
                 if (pswd == self.data["users"][user_index]["credentials"]["password"]):
                     access_granted = True
-                    no_of_attempts = 4
+                    no_of_attempts = 3
                 else:
+                    feedback = Feedback()
+                    if(no_of_attempts == 1):
+                        feedback.treminal_feedback = "1 warning"
+                    elif(no_of_attempts == 2):
+                        feedback.treminal_feedback = "2 warning"
+
+                    self.feedback_pub.publish(feedback)
+
                     no_of_attempts += 1
+
                     access_granted = False
                     query = "YOU HAVE ANOTHER " + str(3 - no_of_attempts) + " ATTEMPS TO ENTER YOUR PASSWORD"
                     self.log(query, color="red")
             else:
                 for index,item in enumerate(self.data["users"]):
                     if(user_name == item["user_name"]):
+                        print user_name
+                        no_of_attempts = 0
                         user_index = index
                         got_usr_name =True
                         pswd = getpass.getpass('Please enter your PASSWORD:')
@@ -116,12 +131,30 @@ class HandleTreminal():
                             no_of_attempts = 4
                         else:
                             no_of_attempts += 1
+
+                            feedback = Feedback()
+                            if (no_of_attempts == 1):
+                                feedback.treminal_feedback = "1 warning"
+                            elif (no_of_attempts == 2):
+                                feedback.treminal_feedback = "2 warning"
+
+                            self.feedback_pub.publish(feedback)
+
                             access_granted = False
                             query = "YOU HAVE ANOTHER " + str(3 - no_of_attempts) + "ATTEMPS"
                             self.log(query, color="red")
 
                 if(not got_usr_name):
+                    feedback = Feedback()
+                    if (no_of_attempts == 1):
+                        feedback.treminal_feedback = "1 warning"
+                    elif (no_of_attempts == 2):
+                        feedback.treminal_feedback = "2 warning"
+
                     no_of_attempts += 1
+
+                    self.feedback_pub.publish(feedback)
+
                     query = "YOU HAVE ANOTHER " + str(3 - no_of_attempts) + " ATTEMPS TO ENTER YOUR USER NAME"
                     self.log(query, color="red")
                     user_name = raw_input()

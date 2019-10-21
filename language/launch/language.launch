@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch> 	
+	<node type="AgentMain.py" pkg="language" name="LanguageAgent" output="screen"/>
+</launch>

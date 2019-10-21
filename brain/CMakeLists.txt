@@ -25,6 +25,7 @@ add_service_files(DIRECTORY srv
 add_message_files(DIRECTORY msg
    FILES
    Access.msg
+   Feedback.msg
 )
 
 ## Generate added messages and services with any dependencies listed here

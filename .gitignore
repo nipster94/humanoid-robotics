@@ -43,3 +43,7 @@ Extra
 #qt-files
 *-build
 CMakeLists.txt.user
+
+#Clion
+*/cmake-build-debug
+

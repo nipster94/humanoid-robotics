@@ -16,7 +16,7 @@ Servo headTilt;
 Servo body;
 
 //Init position of all servos
-int pos_init[] = {50, 50, 90, 90, 90};
+int pos_init[] = {50, 60, 90, 90, 90};
 
 int servo_pins[] = {9, 10, 11, 12, 13};
 
@@ -24,9 +24,8 @@ int servo_pins[] = {9, 10, 11, 12, 13};
 
 //ROS-setup
 void servo_neck_rot(const std_msgs::UInt16& cmd_msg) {
-
+	hubert.loginfo("GOT DATA SERVO NECK ROT");
 	headRotation.write(cmd_msg.data);
-
 	//if (sizeof(cmd_msg.data) >= 2) {
 	//	headRotation.write(cmd_msg.data[0]);
 	//	headTilt.write(cmd_msg.data[1]);
@@ -36,7 +35,7 @@ void servo_neck_rot(const std_msgs::UInt16& cmd_msg) {
 void servo_neck_tilt(const std_msgs::UInt16& cmd_msg) {
 
 	headTilt.write(cmd_msg.data);
-
+	hubert.loginfo("GOT DATA SERVO NECK TILT");
 	//if (sizeof(cmd_msg.data) >= 2) {
 	//	headRotation.write(cmd_msg.data[0]);
 	//	headTilt.write(cmd_msg.data[1]);
@@ -54,6 +53,7 @@ void servo_arm_shoulder(const std_msgs::UInt16& cmd_msg) {
 
 void servo_arm_elbow(const std_msgs::UInt16& cmd_msg) {
 	shoulder.write(cmd_msg.data);
+	elbow.write(cmd_msg.data);
 }
 void servo_body_ex(const std_msgs::UInt16& cmd_msg) {
 //Take in value for body position
@@ -69,14 +69,14 @@ void fire_gun_ex(const std_msgs::Bool& cmd_msg) {
 	}
 }
 
-ros::Subscriber<std_msgs::UInt16> sub_rot("servo_neck_rot", servo_neck_rot);
-ros::Subscriber<std_msgs::UInt16> sub_tilt("servo_neck_tilt", servo_neck_tilt);
+ros::Subscriber<std_msgs::UInt16> sub_rot("/servo_neck_rot", servo_neck_rot);
+ros::Subscriber<std_msgs::UInt16> sub_tilt("/servo_neck_tilt", servo_neck_tilt);
 
-ros::Subscriber<std_msgs::UInt16> sub_shoulder("servo_shoulder", servo_arm_shoulder);
-ros::Subscriber<std_msgs::UInt16> sub_elbow("servo_elbow", servo_arm_elbow);
+ros::Subscriber<std_msgs::UInt16> sub_shoulder("/servo_shoulder", servo_arm_shoulder);
+ros::Subscriber<std_msgs::UInt16> sub_elbow("/servo_elbow", servo_arm_elbow);
 
-ros::Subscriber<std_msgs::UInt16> sub_body("servo_body", servo_body_ex);
-ros::Subscriber<std_msgs::Bool> fire_gun("fire_gun", fire_gun_ex);
+ros::Subscriber<std_msgs::UInt16> sub_body("/servo_body", servo_body_ex);
+ros::Subscriber<std_msgs::Bool> fire_gun("/fire_gun", fire_gun_ex);
 
 void setup() {
 	hubert.initNode();

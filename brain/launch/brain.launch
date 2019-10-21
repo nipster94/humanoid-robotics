@@ -7,5 +7,10 @@
 		<param name="TILT_LB" value="70" /> 		
 		<param name="TILT_UB" value="110" />  		
 		<param name="TILT_STEP_SIZE" value="10" />
+		<param name="BODY_LB" value="60" /> 		
+		<param name="BODY_UB" value="120" />  		
+		<param name="BODY_STEP_SIZE" value="2" />
 	</node>
+
+	<!--<node type="trackface.py" pkg="brain" name="FaceTracker" output="screen"/> -->
 </launch>

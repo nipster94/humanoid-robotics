@@ -1,0 +1,3 @@
+string agent_feedback
+string treminal_feedback
+string brain_feedback

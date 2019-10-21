@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rospy
 from std_msgs.msg import Bool
+from brain.msg import Access,Feedback
 
 from Agent import *
 from Dialog import *
@@ -15,19 +16,26 @@ class AgentMain():
         self.agent = Agent()
         self.dialogList = []
 
-        self.generateHelloDialog()
-        self.generateInterrogation()
-        self.generateWelcomeDialog()
-        self.generateNotWelcomeDialog()
-        self.generateWarningDialog()
-        self.generateSecondWarningDialog()
-        self.generateFinalWarningDialog()
+        self.generateHelloDialog()             #0
+        self.generateInterrogation()           #1
+        self.generateWelcomeDialog()           #2
+        self.generateNotWelcomeDialog()        #3
+        self.generateWarningDialog()           #4
+        self.generateSecondWarningDialog()     #5
+        self.generateFinalWarningDialog()      #6
+        self.generateInterrogationWarnings()   #7
 
         self.agent.setDialogList(self.dialogList)
+
+        self.speech = SpeechSynthesizer()
 
         rospy.init_node("LanguageAgent")
         rospy.Subscriber('/hubert_brain/say_hello',Bool, self.say_hello_callback)
         rospy.Subscriber('/hubert_brain/start_interrogation',Bool,self.start_interrogation)
+        rospy.Subscriber('/hubert_brain/access_details', Access, self.take_decision)
+        rospy.Subscriber('/hubert_brain/feedback',Feedback,self.handle_feedback)
+
+        self.agent_feedback = rospy.Publisher('/hubert_brain/feedback',Feedback,queue_size=1)
 
         self.got_data = False
 
@@ -43,6 +51,7 @@ class AgentMain():
 
     def say_hello_callback(self,data):
         if (data.data):
+            rospy.loginfo("SAY HELLO")
             self.got_data = True
             startContext = self.agent.getDialogList()[0].getContext()
             startID = self.agent.getDialogList()[0].getDialogItemList()[0].getID()
@@ -58,6 +67,68 @@ class AgentMain():
             self.agent.start(startContext, startID)
             self.got_data = False
 
+    def take_decision(self,data):
+        feedback = Feedback()
+        self.got_data = True
+        if(data.access_granted):
+            rospy.loginfo("WELCOME")
+            startContext = self.agent.getDialogList()[2].getContext()
+            startID = self.agent.getDialogList()[2].getDialogItemList()[0].getID()
+            self.agent.start(startContext, startID)
+            self.speech.speak(data.user_name)
+            feedback.agent_feedback = "initial welcome"
+        else:
+            rospy.logerr("NOT WELCOME")
+            startContext = self.agent.getDialogList()[3].getContext()
+            startID = self.agent.getDialogList()[3].getDialogItemList()[0].getID()
+            self.agent.start(startContext, startID)
+            feedback.agent_feedback = "initial warning"
+
+        self.agent_feedback.publish(feedback)
+        self.got_data = False
+
+    def handle_feedback(self,data):
+        feedback = data
+
+        if(feedback.treminal_feedback is not "" and
+                feedback.treminal_feedback == "1 warning"):
+            startContext = self.agent.getDialogList()[7].getContext()
+            startID = self.agent.getDialogList()[7].getDialogItemList()[0].getID()
+            self.agent.start(startContext, startID)
+        elif(feedback.treminal_feedback is not "" and
+                feedback.treminal_feedback == "2 warning"):
+            startContext = self.agent.getDialogList()[7].getContext()
+            startID = self.agent.getDialogList()[7].getDialogItemList()[1].getID()
+            self.agent.start(startContext, startID)
+        elif(feedback.brain_feedback is not  "" and
+                feedback.brain_feedback == "1 warning"):
+            startContext = self.agent.getDialogList()[4].getContext()
+            startID = self.agent.getDialogList()[4].getDialogItemList()[0].getID()
+            self.agent.start(startContext, startID)
+
+            reply = Feedback()
+            reply.agent_feedback = "1st warning issued"
+            self.agent_feedback.publish(reply)
+        elif(feedback.brain_feedback is not  "" and
+                feedback.brain_feedback == "2 warning"):
+            startContext = self.agent.getDialogList()[5].getContext()
+            startID = self.agent.getDialogList()[5].getDialogItemList()[0].getID()
+            self.agent.start(startContext, startID)
+
+            reply = Feedback()
+            reply.agent_feedback = "2nd warning issued"
+            self.agent_feedback.publish(reply)
+        elif(feedback.brain_feedback is not  "" and
+                feedback.brain_feedback == "3 warning"):
+            startContext = self.agent.getDialogList()[6].getContext()
+            startID = self.agent.getDialogList()[6].getDialogItemList()[0].getID()
+            self.agent.start(startContext, startID)
+
+            reply = Feedback()
+            reply.agent_feedback = "3rd warning issued"
+            self.agent_feedback.publish(reply)
+        else:
+            rospy.logwarn("something else was passed")
 
     def generateHelloDialog(self):
         dialogItemList = []
@@ -84,7 +155,7 @@ class AgentMain():
         itemI1.setOutputAction(outputAction)
         dialogItemList.append(itemI1)
 
-        waitingTime = 2.0
+        waitingTime = 1.0
         itemI2 = WaitItem('I2', waitingTime)
         outputAction = OutputAction('Interrogation', 'I3')
         itemI2.setOutputAction(outputAction)
@@ -215,7 +286,6 @@ class AgentMain():
         self.dialogList.append(secondWarningDialog)
 
     def generateFinalWarningDialog(self):
-
         dialogItemList = []
         finalWarningDialog = Dialog('FinalWarningDialog')
 
@@ -238,6 +308,27 @@ class AgentMain():
         outputAction.setPattern(pattern)
         itemFW3.setOutputAction(outputAction)
         dialogItemList.append(itemFW3)
+
+        finalWarningDialog.setDialogItemList(dialogItemList)
+        self.dialogList.append(finalWarningDialog)
+
+    def generateInterrogationWarnings(self):
+        dialogItemList = []
+        finalWarningDialog = Dialog('InterrogationWarnings')
+
+        itemIW1 = OutputItem('IW1')
+        outputAction = OutputAction('', '')
+        pattern = Pattern('This is your first warning. You have two attemps left')
+        outputAction.setPattern(pattern)
+        itemIW1.setOutputAction(outputAction)
+        dialogItemList.append(itemIW1)
+
+        itemIW2 = OutputItem('IW2')
+        outputAction = OutputAction('', '')
+        pattern = Pattern('This is your second warning. You better get this right')
+        outputAction.setPattern(pattern)
+        itemIW2.setOutputAction(outputAction)
+        dialogItemList.append(itemIW2)
 
         finalWarningDialog.setDialogItemList(dialogItemList)
         self.dialogList.append(finalWarningDialog)
