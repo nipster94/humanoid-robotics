@@ -71,19 +71,30 @@ void HubertBrain::faceFoundCallback(const std_msgs::Bool &msg){
     }
     else if(face_found != previous_face_found){
         ROS_INFO("Face detection state changed");
-        if(robotState == RobotState::Idling){
-            robotState = RobotState::Tracking;
-            state_changed = true;
+        if(face_found){
+            if(robotState == RobotState::Idling){
+                robotState = RobotState::Tracking;
+                state_changed = true;
+            }
+            else if (robotState == RobotState::Tracking && face_found){
+                ppl_passby_count += 1;
+                ROS_INFO("PEOPLE FOUND %d",ppl_passby_count);
+            }
+            else if (robotState == RobotState::Interrogation && face_found) {
+                ppl_passby_count = 0;
+            }
+            else if(robotState == RobotState::DecisionMaking && face_found){
+                ppl_passby_count += 1;
+            }
         }
-        else if (robotState == RobotState::Tracking && face_found){           
-            ppl_passby_count += 1;
-            ROS_INFO("PEOPLE FOUND %d",ppl_passby_count);
-        }
-        else if (robotState == RobotState::Interrogation && face_found) {
-            ppl_passby_count = 0;
-        }
-        else if(robotState == RobotState::DecisionMaking && face_found){
-            ppl_passby_count += 1;
+        else if(!face_found && robotState == RobotState::Tracking){
+            ROS_INFO("Tracking person disappear");
+            //Reset robot neck and body
+            std_msgs::UInt16 common_msg;
+            common_msg.data = 90;
+            neck_pan_loop_.publish(common_msg);
+            neck_tilt_loop_.publish(common_msg);
+            body_loop_.publish(common_msg);
         }
 
         previous_face_found = face_found;
@@ -100,7 +111,7 @@ void HubertBrain::faceFoundCallback(const std_msgs::Bool &msg){
 }
 
 void HubertBrain::feedbackCallback(const brain::Feedback &msg){
-//    std::cout << msg.agent_feedback << std::endl;
+
 
     ROS_DEBUG("got info %s",msg.agent_feedback.c_str());
 
@@ -270,10 +281,13 @@ void HubertBrain::idlingLoop(){
 
 void HubertBrain::trackingStateLoop(){
     ros::AsyncSpinner spinner(1);
-    ros::Rate spinnerRate(0.1);
+    ros::Rate spinnerRate(0.05);
 
     ROS_INFO("IN THE TRACKING STATE");
-    
+    brain::Feedback feedbackMsg;
+    feedbackMsg.brain_feedback = "start tracking";
+    feedback_pub_.publish(feedbackMsg);
+
     if(face_found) {
         std_msgs::Bool hello_msg;
         hello_msg.data = true;
@@ -291,12 +305,6 @@ void HubertBrain::trackingStateLoop(){
         interrogateMsg.data = true;
         start_interrogation_.publish(interrogateMsg);
         robotState = RobotState::Interrogation;
-
-        //Need to wait for few seconds until language processing
-        //part finishes its sentence
-
-        //ros::Duration(5).sleep();
-
     }
     else if (face_found && ppl_passby_count > 0) {
         ppl_passby_count = 0;
@@ -309,6 +317,18 @@ void HubertBrain::trackingStateLoop(){
 
 void HubertBrain::handleInterrogation(){
     ROS_WARN("HANDLE INTERROGATION");
+    // When we are doing the doing the interrogation then we
+    // stop publishing any neck/body values. We also set this
+    // to default value (90,90,90) ~not arm
+    brain::Feedback feedbackMsg;
+    feedbackMsg.brain_feedback = "stop tracking";
+    feedback_pub_.publish(feedbackMsg);
+
+    std_msgs::UInt16 common_msg;
+    common_msg.data = 90;
+    neck_pan_loop_.publish(common_msg);
+    neck_tilt_loop_.publish(common_msg);
+    body_loop_.publish(common_msg);
 
     std_msgs::UInt16 elbow;
     elbow.data = 60;
@@ -335,6 +355,10 @@ void HubertBrain::handleInterrogation(){
     ros::Duration(5).sleep();
 
     robotState = RobotState::FeedbackWaitingState;
+
+    //Once interrogation is done we start tracking again
+    feedbackMsg.brain_feedback = "start tracking";
+    feedback_pub_.publish(feedbackMsg);
 }
 
 void HubertBrain::feedbackWaiting() {
@@ -357,6 +381,7 @@ void HubertBrain::feedbackWaiting() {
         shoulder.data = 20;
         robot_shoulder_.publish(shoulder);
     }
+
 }
 
 void HubertBrain::takeDecision(){
@@ -378,30 +403,38 @@ void HubertBrain::takeDecision(){
                 
         while(!exit_loop){
 
-            if(ppl_passby_count == 0 && face_found &&
-                    warningState == WarningState::InitialWarning){
-                //Give second warning via feedback msg
-                brainFeedback.brain_feedback = "2 warning";
-                feedback_pub_.publish(brainFeedback);
-                ROS_INFO("2 warning");
-            }
-            else if(ppl_passby_count == 0 && face_found &&
-                    warningState == WarningState::SecondWarning){
-                brainFeedback.brain_feedback = "3 warning";
-                feedback_pub_.publish(brainFeedback);
-                ROS_INFO("3 warning");
-            }
-            else if(ppl_passby_count > 0 && face_found){
-                exit_loop = true;
-                ROS_INFO("face found");
-            }
-            else if(warningState == WarningState::FinalWarning){
-                exit_loop = true;
-                ROS_INFO("final warning");
-            }
+            if(previousWS != warningState){
+                if(ppl_passby_count == 0 && face_found &&
+                   warningState == WarningState::InitialWarning){
+                    //Give second warning via feedback msg
+                    brainFeedback.brain_feedback = "2 warning";
+                    feedback_pub_.publish(brainFeedback);
+                    ROS_INFO("2 warning");
+                }
+                else if(ppl_passby_count == 0 && face_found &&
+                        warningState == WarningState::SecondWarning){
+                    brainFeedback.brain_feedback = "3 warning";
+                    feedback_pub_.publish(brainFeedback);
+                    ROS_INFO("3 warning");
+                }
+                else if(ppl_passby_count > 0 && face_found){
+                    exit_loop = true;
+                    ROS_INFO("face found");
+                }
+                else if(warningState == WarningState::FinalWarning){
+                    exit_loop = true;
+                    ROS_INFO("final warning");
+                }
 
+                previousWS = warningState;
+            }
             spinnerRate.sleep();
         }
+
+        ROS_ERROR("DONE GIVING WARNINGS");
+        ROS_INFO("WILL WAIT FOR 10 SECONDS");
+        ros::Duration(10).sleep();
+        ROS_INFO("DONE WAITING");
 
         if(ppl_passby_count == 0 and face_found){
             std_msgs::Bool fire_gun;
@@ -410,10 +443,34 @@ void HubertBrain::takeDecision(){
         }
 
         spinner.stop();
-
     }
     ROS_WARN("WAITING");
     ros::Duration(5).sleep();
+    resetSystem();
+}
+
+void HubertBrain::resetSystem() {
+    ROS_INFO("RESETTING THE SYSTEM");
+
+    //Robot configurations
+    //Neck and Base
+    std_msgs::UInt16 common_msg;
+    common_msg.data = 90;
+    neck_pan_loop_.publish(common_msg);
+    neck_tilt_loop_.publish(common_msg);
+    body_loop_.publish(common_msg);
+    //Two Arms
+    common_msg.data = 50;
+    robot_elbow_.publish(common_msg);
+    common_msg.data = 60;
+    robot_shoulder_.publish(common_msg);
+
+    //Gun
+    std_msgs::Bool fire_gun;
+    fire_gun.data = false;
+    fire_gun_.publish(fire_gun);
+
+    //Face detection and tracking
     robotState = face_found ? RobotState::Idling : RobotState::Tracking;
     face_init = true;
 }

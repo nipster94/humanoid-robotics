@@ -38,6 +38,7 @@ class AgentMain():
         self.agent_feedback = rospy.Publisher('/hubert_brain/feedback',Feedback,queue_size=1)
 
         self.got_data = False
+        self.current_task_done = False
 
         self.rate = rospy.Rate(1)
         while not rospy.is_shutdown():
@@ -66,6 +67,7 @@ class AgentMain():
             startID = self.agent.getDialogList()[1].getDialogItemList()[0].getID()
             self.agent.start(startContext, startID)
             self.got_data = False
+            self.current_task_done = True
 
     def take_decision(self,data):
         feedback = Feedback()
@@ -77,58 +79,67 @@ class AgentMain():
             self.agent.start(startContext, startID)
             self.speech.speak(data.user_name)
             feedback.agent_feedback = "initial welcome"
+            self.current_task_done = True
         else:
             rospy.logerr("NOT WELCOME")
             startContext = self.agent.getDialogList()[3].getContext()
             startID = self.agent.getDialogList()[3].getDialogItemList()[0].getID()
             self.agent.start(startContext, startID)
             feedback.agent_feedback = "initial warning"
+            self.current_task_done = True
 
         self.agent_feedback.publish(feedback)
         self.got_data = False
 
     def handle_feedback(self,data):
         feedback = data
+        if (self.current_task_done):
+            self.current_task_done = False
+            if(feedback.treminal_feedback is not "" and
+                    feedback.treminal_feedback == "1 warning"):
+                startContext = self.agent.getDialogList()[7].getContext()
+                startID = self.agent.getDialogList()[7].getDialogItemList()[0].getID()
+                self.agent.start(startContext, startID)
+            elif(feedback.treminal_feedback is not "" and
+                    feedback.treminal_feedback == "2 warning"):
+                startContext = self.agent.getDialogList()[7].getContext()
+                startID = self.agent.getDialogList()[7].getDialogItemList()[1].getID()
+                self.agent.start(startContext, startID)
+            elif(feedback.brain_feedback is not  "" and
+                    feedback.brain_feedback == "1 warning"):
+                startContext = self.agent.getDialogList()[4].getContext()
+                startID = self.agent.getDialogList()[4].getDialogItemList()[0].getID()
+                self.agent.start(startContext, startID)
 
-        if(feedback.treminal_feedback is not "" and
-                feedback.treminal_feedback == "1 warning"):
-            startContext = self.agent.getDialogList()[7].getContext()
-            startID = self.agent.getDialogList()[7].getDialogItemList()[0].getID()
-            self.agent.start(startContext, startID)
-        elif(feedback.treminal_feedback is not "" and
-                feedback.treminal_feedback == "2 warning"):
-            startContext = self.agent.getDialogList()[7].getContext()
-            startID = self.agent.getDialogList()[7].getDialogItemList()[1].getID()
-            self.agent.start(startContext, startID)
-        elif(feedback.brain_feedback is not  "" and
-                feedback.brain_feedback == "1 warning"):
-            startContext = self.agent.getDialogList()[4].getContext()
-            startID = self.agent.getDialogList()[4].getDialogItemList()[0].getID()
-            self.agent.start(startContext, startID)
+                reply = Feedback()
+                reply.agent_feedback = "1st warning issued"
+                self.agent_feedback.publish(reply)
+            elif(feedback.brain_feedback is not  "" and
+                    feedback.brain_feedback == "2 warning"):
+                startContext = self.agent.getDialogList()[5].getContext()
+                startID = self.agent.getDialogList()[5].getDialogItemList()[0].getID()
+                self.agent.start(startContext, startID)
 
-            reply = Feedback()
-            reply.agent_feedback = "1st warning issued"
-            self.agent_feedback.publish(reply)
-        elif(feedback.brain_feedback is not  "" and
-                feedback.brain_feedback == "2 warning"):
-            startContext = self.agent.getDialogList()[5].getContext()
-            startID = self.agent.getDialogList()[5].getDialogItemList()[0].getID()
-            self.agent.start(startContext, startID)
+                reply = Feedback()
+                reply.agent_feedback = "2nd warning issued"
+                self.agent_feedback.publish(reply)
+            elif(feedback.brain_feedback is not  "" and
+                    feedback.brain_feedback == "3 warning"):
+                startContext = self.agent.getDialogList()[6].getContext()
+                startID = self.agent.getDialogList()[6].getDialogItemList()[0].getID()
+                self.agent.start(startContext, startID)
 
-            reply = Feedback()
-            reply.agent_feedback = "2nd warning issued"
-            self.agent_feedback.publish(reply)
-        elif(feedback.brain_feedback is not  "" and
-                feedback.brain_feedback == "3 warning"):
-            startContext = self.agent.getDialogList()[6].getContext()
-            startID = self.agent.getDialogList()[6].getDialogItemList()[0].getID()
-            self.agent.start(startContext, startID)
+                reply = Feedback()
+                reply.agent_feedback = "3rd warning issued"
+                self.agent_feedback.publish(reply)
+            else:
+                rospy.logwarn("something else was passed")
 
-            reply = Feedback()
-            reply.agent_feedback = "3rd warning issued"
-            self.agent_feedback.publish(reply)
+            self.current_task_done = True
         else:
-            rospy.logwarn("something else was passed")
+            rospy.logwarn("Ignoring current taks")
+
+    ##################### DIALOG ITEMS #####################
 
     def generateHelloDialog(self):
         dialogItemList = []

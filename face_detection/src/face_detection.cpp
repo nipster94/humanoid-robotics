@@ -74,12 +74,13 @@ void ROSFaceDetection::getEllipseCenter(){
 void ROSFaceDetection::moveBase(){
     std::map<std::__cxx11::string,bool> move_base_data;
     move_base_data = faceTracker.moveBase();
-
-    if(move_base_data["MOVE_BASE"] != currentMoveBase){
+    //if move base if true we publish it until it become false
+    if(move_base_data["MOVE_BASE"] ){
+//        != currentMoveBase
         face_detection::MoveBase moveBaseMsg;
         moveBaseMsg.move_base = move_base_data["MOVE_BASE"];
         moveBaseMsg.turn_left = move_base_data["TURN_LEFT"];
-        currentMoveBase = move_base_data["MOVE_BASE"];
+//        currentMoveBase = move_base_data["MOVE_BASE"];
         move_base_pub_.publish(moveBaseMsg);
     }
 }

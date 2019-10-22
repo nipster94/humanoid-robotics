@@ -75,6 +75,7 @@ class HubertBrain
 
         RobotState robotState = RobotState::Idling;
         WarningState warningState = WarningState::NoWarning;
+        WarningState previousWS = WarningState::NoWarning;
 
         bool face_found;
         bool previous_face_found;
@@ -88,6 +89,7 @@ class HubertBrain
         void handleInterrogation();
         void feedbackWaiting();
         void takeDecision();
+        void resetSystem();
 
         void faceFoundCallback(const std_msgs::Bool &msg);
         void feedbackCallback(const brain::Feedback &msg);

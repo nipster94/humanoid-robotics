@@ -5,6 +5,7 @@ import math
 from std_msgs.msg import UInt16,UInt16MultiArray,Bool
 from geometry_msgs.msg import PointStamped
 from face_detection.msg import MoveBase,Face
+from brain.msg import Feedback
 
 class FaceTracker():
     def __init__(self):
@@ -23,10 +24,13 @@ class FaceTracker():
         self.gotNewData = False
         self.move_base = False
         self.face_found = False
+        self.track_face = False
 
         rospy.Subscriber('/face_detection/img_location',Face, self.target_callback)
         rospy.Subscriber('/face_detection/move_base',MoveBase,self.move_base_callback)
         rospy.Subscriber('/face_detection/face_found',Bool, self.face_found_callback)
+        rospy.Subscriber('/hubert_brain/feedback',Feedback,self.handle_feedback)
+
 
         self.pan_pub = rospy.Publisher("/servo_neck_rot", UInt16, queue_size=1)
         self.tilt_pub = rospy.Publisher("/servo_neck_tilt",UInt16,queue_size=1)
@@ -39,20 +43,30 @@ class FaceTracker():
             self.rate.sleep()
 
     def face_found_callback(self,data):
-        print data
-        print self.face_found
+        # print data
+        # print self.face_found
         if(data.data):
             self.face_found = True
 
+    def handle_feedback(self,data):
+        feedback = data
+        if(feedback.brain_feedback == "start tracking"):
+            rospy.loginfo("start tracking")
+            self.track_face = True
+        elif(feedback.brain_feedback == "stop tracking"):
+            rospy.loginfo("stsrt tracking")
+            self.track_face = False
+
     def target_callback(self,data):
-        if(self.face_found):
+
+        if(self.face_found and self.track_face):
             x = data.point.point.x
             y = data.point.point.y
             w = data.height.data
             h = data.width.data
             self.current_angle_x, self.current_angle_y, distance = self.trackface(x,y,w,h)
 
-            print self.current_angle_x, self.current_angle_y
+            # print self.current_angle_x, self.current_angle_y
 
             if self.init:
                 self.pre_angle_x = self.current_angle_x
@@ -73,14 +87,18 @@ class FaceTracker():
                 self.tilt_angle = self.current_angle_y
 
             # self.neck_angles = [angle_x,angle_y]
+
     def move_base_callback(self,data):
-        if self.face_found:
-            print data
-        # if data.move_base.data:
-        #     if data.turn_left:
-        #         self.body_angle += 5
-        #     else:
-        #         self.body_angle -= 5
+
+        if (self.face_found and self.track_face):
+            rospy.logerr("GOT MOVE BASE DATA")
+            if data.move_base:
+                if data.turn_left:
+                    self.body_angle += 5
+                else:
+                    self.body_angle -= 5
+
+                self.move_base = True
 
     def trackface(self,x, y, w, h):
         height = 480
@@ -115,7 +133,6 @@ class FaceTracker():
             body_msg.data = self.body_angle
 
             self.body_angle_pub.publish(body_msg)
-
 
 if __name__ == '__main__':
     FaceTracker()
