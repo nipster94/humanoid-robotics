@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import rospkg
-from brain.srv import RequestTreminal,RequestTreminalResponse
+from brain.srv import RequestTerminal, RequestTerminalResponse
 from brain.msg import Feedback
 
 import yaml
@@ -15,14 +15,14 @@ try:
 except ImportError:
     colored = None
 
-class HandleTreminal():
+class HandleTerminal():
     def __init__(self):
-        rospy.init_node('TreminalApplication')
+        rospy.init_node('TerminalApplication')
         rospack = rospkg.RosPack()
         self.initialPoint = True
         path = rospack.get_path('brain') + '/resources/users.yaml'
 
-        self.terminalService = rospy.Service('/hubert_brain/terminal',RequestTreminal,self.handle_terminal_service)
+        self.terminalService = rospy.Service('/hubert_brain/terminal',RequestTerminal,self.handle_terminal_service)
 
         self.feedback_pub = rospy.Publisher('/hubert_brain/feedback',Feedback,queue_size=1)
 
@@ -46,7 +46,7 @@ class HandleTreminal():
 
     def handle_terminal_service(self,request):
         os.system('clear')
-        responce = RequestTreminalResponse()
+        responce = RequestTerminalResponse()
         if(request.open_terminal):
             haveAccess, name = self.open_treminal()
             # haveAccess,name = self.check_access()
@@ -188,7 +188,7 @@ class HandleTreminal():
 
 
 if __name__ == '__main__':
-    HandleTreminal()
+    HandleTerminal()
 
 
 

@@ -13,4 +13,6 @@
 	</node>
 
 	<node type="trackface.py" pkg="brain" name="FaceTracker" output="screen"/>
+
+	<node type="handleTerminal.py" pkg="brain" name="TerminalApplication" output="screen" launch-prefix="xterm -e"/>
 </launch>

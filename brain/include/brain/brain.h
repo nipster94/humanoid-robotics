@@ -7,7 +7,7 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/UInt16.h>
 #include <std_msgs/UInt16MultiArray.h>
-#include "brain/RequestTreminal.h"
+#include "brain/RequestTerminal.h"
 #include "brain/Access.h"
 #include "brain/Feedback.h"
 

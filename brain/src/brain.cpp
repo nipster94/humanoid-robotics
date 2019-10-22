@@ -28,7 +28,7 @@ HubertBrain::HubertBrain():
     face_found_sub = nh_.subscribe("/face_detection/face_found", 1, &HubertBrain::faceFoundCallback,this);
     feedback_sub = nh_.subscribe("/hubert_brain/feedback",1,&HubertBrain::feedbackCallback,this);
 
-    terminalClient = nh_.serviceClient<brain::RequestTreminal>("/hubert_brain/terminal");
+    terminalClient = nh_.serviceClient<brain::RequestTerminal>("/hubert_brain/terminal");
 
 
     ros::param::get("~PAN_LB",pan_lb);
@@ -338,7 +338,7 @@ void HubertBrain::handleInterrogation(){
     shoulder.data = 20;
     robot_shoulder_.publish(shoulder);
 
-    brain::RequestTreminal terminalService;
+    brain::RequestTerminal terminalService;
     terminalService.request.open_terminal = true;
 
     if(terminalClient.call(terminalService)){
