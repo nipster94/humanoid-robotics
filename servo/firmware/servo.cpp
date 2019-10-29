@@ -16,7 +16,7 @@ Servo headTilt;
 Servo body;
 
 //Init position of all servos
-int pos_init[] = {50, 50, 90, 90, 90};
+int pos_init[] = {60, 90, 90, 90, 90};
 
 int servo_pins[] = {9, 10, 11, 12, 13};
 

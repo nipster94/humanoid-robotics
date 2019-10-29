@@ -12,7 +12,10 @@
 		<param name="BODY_STEP_SIZE" value="2" />
 	</node>
 
-	<node type="trackface.py" pkg="brain" name="FaceTracker" output="screen"/>
+	<node type="trackface.py" pkg="brain" name="FaceTracker" output="screen">
+		<param name="BODY_LB" value="60" />
+		<param name="BODY_UB" value="120" />
+	</node>
 
 	<node type="handleTerminal.py" pkg="brain" name="TerminalApplication" output="screen" launch-prefix="xterm -e"/>
 </launch>

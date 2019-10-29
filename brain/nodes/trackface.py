@@ -36,6 +36,10 @@ class FaceTracker():
         self.tilt_pub = rospy.Publisher("/servo_neck_tilt",UInt16,queue_size=1)
         self.body_angle_pub = rospy.Publisher("/servo_body", UInt16, queue_size=1)
 
+        self.body_lb = rospy.get_param('~BODY_LB',default=60)
+        self.body_ub = rospy.get_param('~BODY_UB',default=120)
+
+
         self.rate = rospy.Rate(5)
         while not rospy.is_shutdown():
             self.publish_neck_angle()
@@ -50,16 +54,18 @@ class FaceTracker():
 
     def handle_feedback(self,data):
         feedback = data
-        if(feedback.brain_feedback == "start tracking"):
+        if("start_tracking" in feedback.brain_feedback):
             rospy.loginfo("start tracking")
+            self.body_angle = int(feedback.brain_feedback.split('_')[2])
             self.track_face = True
-        elif(feedback.brain_feedback == "stop tracking"):
-            rospy.loginfo("stsrt tracking")
+        elif(feedback.brain_feedback == "stop_tracking"):
+            rospy.loginfo("stop tracking")
             self.track_face = False
 
     def target_callback(self,data):
 
-        if(self.face_found and self.track_face):
+        if(self.face_found and self.track_face and
+                (data.point.point.x != 0 or data.point.point.y != 0)):
             x = data.point.point.x
             y = data.point.point.y
             w = data.height.data
@@ -129,10 +135,15 @@ class FaceTracker():
 
     def publish_body_angle(self):
         if self.move_base:
-            body_msg = UInt16()
-            body_msg.data = self.body_angle
+            if(self.body_angle < self.body_ub and self.body_angle > self.body_lb):
+                body_msg = UInt16()
+                body_msg.data = self.body_angle
+                self.body_angle_pub.publish(body_msg)
+            elif(self.body_angle >= self.body_ub):
+                self.body_angle = self.body_ub
+            elif(self.body_angle <= self.body_lb):
+                self.body_angle = self.body_lb
 
-            self.body_angle_pub.publish(body_msg)
 
 if __name__ == '__main__':
     FaceTracker()

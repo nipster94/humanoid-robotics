@@ -97,7 +97,7 @@ class HandleTerminal():
         user_index = 0
 
         while (not access_granted and not no_of_attempts >=3):
-            print no_of_attempts
+            # print no_of_attempts
             if(got_usr_name):
                 pswd = getpass.getpass('Please enter your PASSWORD:')
                 if (pswd == self.data["users"][user_index]["credentials"]["password"]):
@@ -120,7 +120,7 @@ class HandleTerminal():
             else:
                 for index,item in enumerate(self.data["users"]):
                     if(user_name == item["user_name"]):
-                        print user_name
+                        # print user_name
                         no_of_attempts = 0
                         user_index = index
                         got_usr_name =True

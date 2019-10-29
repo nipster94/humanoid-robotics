@@ -68,6 +68,7 @@ class HubertBrain
         int body_step_size;
 
         int ppl_passby_count;
+        int current_body_angle;
 
         std::vector<uint> panAngles_;
         std::vector<uint> tiltAngles_;

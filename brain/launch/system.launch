@@ -14,7 +14,10 @@
     </node>
 
     <!-- Add Face tracker node -->
-    <node type="trackface.py" pkg="brain" name="FaceTracker"/>
+    <node type="trackface.py" pkg="brain" name="FaceTracker" >
+        <param name="BODY_LB" value="60" />
+        <param name="BODY_UB" value="120" />
+    </node>
 
     <!-- Add Terminal application. Will run in a seperate terminal -->
     <node type="handleTerminal.py" pkg="brain" name="TerminalApplication" output="screen" launch-prefix="xterm -e"/>

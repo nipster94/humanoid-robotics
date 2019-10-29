@@ -111,8 +111,6 @@ void HubertBrain::faceFoundCallback(const std_msgs::Bool &msg){
 }
 
 void HubertBrain::feedbackCallback(const brain::Feedback &msg){
-
-
     ROS_DEBUG("got info %s",msg.agent_feedback.c_str());
 
     if(msg.agent_feedback == "initial welcome" ||
@@ -239,14 +237,19 @@ void HubertBrain::idlingLoop(){
     int pan_count = 0;
     int tilt_count = 0;
     int body_count = 0;
+
+    std_msgs::UInt16 pan_msg;
+    std_msgs::UInt16 tilt_msg;
+    std_msgs::UInt16 body_msg;
+
+    brain::Feedback feedbackMsg;
+    feedbackMsg.brain_feedback = "stop_tracking";
+    feedback_pub_.publish(feedbackMsg);
     
     ros::AsyncSpinner spinner(1);
     ros::Rate spinnerRate(0.5);
     spinner.start();
     while(ros::ok() && !state_changed){
-        std_msgs::UInt16 pan_msg;
-        std_msgs::UInt16 tilt_msg;
-        std_msgs::UInt16 body_msg;
 
         pan_count = pan_count == panAngles_.size() ? 0 : pan_count;
         tilt_count = tilt_count == tiltAngles_.size() ? 0 : tilt_count;
@@ -266,7 +269,7 @@ void HubertBrain::idlingLoop(){
         neck_pan_loop_.publish(pan_msg);
         neck_tilt_loop_.publish(tilt_msg);
         body_loop_.publish(body_msg);
-
+        current_body_angle = bodyAngles_[body_count];
         ROS_INFO("PUBLISHING ANGLES %d, %d, %d", panAngles_[pan_count], tiltAngles_[tilt_count], bodyAngles_[body_count]);
         spinnerRate.sleep();
         ROS_INFO("DONE WAITING.....");
@@ -277,15 +280,20 @@ void HubertBrain::idlingLoop(){
     }
     ROS_INFO("ENDING IDLING LOOP.....");
     spinner.stop();
+
+    pan_msg.data = 90;
+    tilt_msg.data = 90;
+    neck_pan_loop_.publish(pan_msg);
+    neck_tilt_loop_.publish(tilt_msg);
 }
 
 void HubertBrain::trackingStateLoop(){
     ros::AsyncSpinner spinner(1);
-    ros::Rate spinnerRate(0.05);
+    ros::Rate spinnerRate(0.1);
 
     ROS_INFO("IN THE TRACKING STATE");
     brain::Feedback feedbackMsg;
-    feedbackMsg.brain_feedback = "start tracking";
+    feedbackMsg.brain_feedback = "start_tracking_" + std::to_string(current_body_angle);
     feedback_pub_.publish(feedbackMsg);
 
     if(face_found) {
@@ -321,7 +329,7 @@ void HubertBrain::handleInterrogation(){
     // stop publishing any neck/body values. We also set this
     // to default value (90,90,90) ~not arm
     brain::Feedback feedbackMsg;
-    feedbackMsg.brain_feedback = "stop tracking";
+    feedbackMsg.brain_feedback = "stop_tracking";
     feedback_pub_.publish(feedbackMsg);
 
     std_msgs::UInt16 common_msg;
@@ -375,10 +383,10 @@ void HubertBrain::feedbackWaiting() {
         robot_shoulder_.publish(shoulder);
     } else{
         //Move arm to shoot
-        elbow.data = 40;
+        elbow.data = 20;
         robot_elbow_.publish(elbow);
 
-        shoulder.data = 20;
+        shoulder.data = 40;
         robot_shoulder_.publish(shoulder);
     }
 
@@ -417,7 +425,7 @@ void HubertBrain::takeDecision(){
                     feedback_pub_.publish(brainFeedback);
                     ROS_INFO("3 warning");
                 }
-                else if(ppl_passby_count > 0 && face_found){
+                else if(ppl_passby_count > 5 && face_found){
                     exit_loop = true;
                     ROS_INFO("face found");
                 }
@@ -445,7 +453,7 @@ void HubertBrain::takeDecision(){
         spinner.stop();
     }
     ROS_WARN("WAITING");
-    ros::Duration(5).sleep();
+    ros::Duration(10).sleep();
     resetSystem();
 }
 
@@ -460,9 +468,9 @@ void HubertBrain::resetSystem() {
     neck_tilt_loop_.publish(common_msg);
     body_loop_.publish(common_msg);
     //Two Arms
-    common_msg.data = 50;
-    robot_elbow_.publish(common_msg);
     common_msg.data = 60;
+    robot_elbow_.publish(common_msg);
+    common_msg.data = 90;
     robot_shoulder_.publish(common_msg);
 
     //Gun
@@ -471,8 +479,9 @@ void HubertBrain::resetSystem() {
     fire_gun_.publish(fire_gun);
 
     //Face detection and tracking
-    robotState = face_found ? RobotState::Idling : RobotState::Tracking;
     face_init = true;
+    robotState = face_found ? RobotState::Tracking : RobotState::Idling ;
+
 }
 
 void HubertBrain::checkRobotStates(){
