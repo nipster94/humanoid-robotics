@@ -13,7 +13,7 @@ ROSFaceDetection::ROSFaceDetection():
     std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/Extra/shape_predictor_68_face_landmarks.dat";
 
     image_sub_ = it_.subscribe("/camera/color/image_raw", 1, &ROSFaceDetection::imageCallBack,this);
-    image_pub_ = it_.advertise("/face_tracking/output_video", 1);
+    image_pub_ = it_.advertise("/face_detection/output_video", 1);
 
     img_location_ = nh_.advertise<face_detection::Face>("face_detection/img_location", 1);
     move_base_pub_ = nh_.advertise<face_detection::MoveBase>("face_detection/move_base",1);
@@ -28,6 +28,9 @@ ROSFaceDetection::ROSFaceDetection():
 
 void ROSFaceDetection::execute(){
     ROS_INFO("START FACE TRACKING NODE !!!!");
+
+    int test = faceTracker.Temp();
+
     ros::Rate rate(10);
     while (ros::ok()) {
        getEllipseCenter();
