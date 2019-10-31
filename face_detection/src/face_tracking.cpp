@@ -47,55 +47,6 @@ void FaceTracking::trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_){
       output_image_ = image_;
 }
 
-int FaceTracking::Temp(){
-    cv::VideoCapture cap(1);
-    if (!cap.isOpened())
-    {
-        std::cerr << "Unable to connect to camera" << std::endl;
-        return 1;
-    }
-
-    dlib::image_window win;
-
-    // Load face detection and pose estimation models.
-    dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
-    dlib::shape_predictor pose_model;
-    dlib::deserialize("/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/Extra/shape_predictor_68_face_landmarks.dat") >> pose_model;
-
-    // Grab and process frames until the main window is closed by the user.
-    while(!win.is_closed())
-    {
-        // Grab a frame
-        cv::Mat temp;
-        if (!cap.read(temp))
-        {
-            break;
-        }
-        // Turn OpenCV's Mat into something dlib can deal with.  Note that this just
-        // wraps the Mat object, it doesn't copy anything.  So cimg is only valid as
-        // long as temp is valid.  Also don't do anything to temp that would cause it
-        // to reallocate the memory which stores the image as that will make cimg
-        // contain dangling pointers.  This basically means you shouldn't modify temp
-        // while using cimg.
-        dlib::cv_image<dlib::bgr_pixel> cimg(temp);
-
-        // Detect faces
-        std::vector<dlib::rectangle> faces = detector(cimg);
-        // Find the pose of each face.
-        std::vector<dlib::full_object_detection> shapes;
-        for (unsigned long i = 0; i < faces.size(); ++i)
-            shapes.push_back(pose_model(cimg, faces[i]));
-
-        // Display it all on the screen
-        win.clear_overlay();
-        win.set_image(cimg);
-        win.add_overlay(render_face_detections(shapes));
-    }
-
-    return 1;
-}
-
-
 int FaceTracking::getTrackingIndex(dlib::cv_image<dlib::bgr_pixel> img_, std::vector<dlib::rectangle> faces_){
     std::vector<dlib::full_object_detection> all_shapes;
     cv::vector< cv::vector<cv::Point> > all_faces_land_mark;
@@ -135,7 +86,6 @@ std::vector<dlib::rectangle> FaceTracking::getCloseFaces(std::vector<dlib::recta
             cfaces.push_back(faces_[i]);
         }
     }
-
     return cfaces;
 }
 
@@ -264,21 +214,14 @@ void FaceTracking::startTracking(cv::Mat &image_,
            turnLeft = true;
        }
 
-        std::string tempStr = std::to_string(min_index);
-
-
         char str[200];
-
         sprintf( str, "TRACKING");
         putText( image_, str, minEllipse_.center, cv::FONT_HERSHEY_PLAIN, 2,  cv::Scalar(0,255,0), 3, 8, false );
-
 
         if( minEllipse_.center.x >= 0 &&
             minEllipse_.center.x <= 640 &&
             minEllipse_.center.y >= 0 &&
             minEllipse_.center.x <= 480 ) minEllipse = minEllipse_;
-
-
 
         state = Updating;
     }
@@ -288,8 +231,6 @@ void FaceTracking::startTracking(cv::Mat &image_,
         state = Tracking;
     }
 }
-
-
 
 bool FaceTracking::requestDetectedRealTime(){
     return face_found;
@@ -302,10 +243,6 @@ int FaceTracking::requestFacesSize(){
 cv::RotatedRect FaceTracking::requestEllipseCenter(){
     return minEllipse;
 }
-
-//bool FaceTracking::moveBase(){
-//    return move_base;
-//}
 
 std::map<std::__cxx11::string, bool> FaceTracking::moveBase()
 {

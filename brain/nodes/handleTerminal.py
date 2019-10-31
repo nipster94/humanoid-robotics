@@ -49,7 +49,6 @@ class HandleTerminal():
         responce = RequestTerminalResponse()
         if(request.open_terminal):
             haveAccess, name = self.open_treminal()
-            # haveAccess,name = self.check_access()
             responce.access = haveAccess
             responce.name = name
 
@@ -66,7 +65,8 @@ class HandleTerminal():
 
     def load_welcome(self):
         log_msg_2 = '''
-                            Welcome to the new Authentication system of the Department of TIF at 
+                            Welcome to the new Authentication system of the Department of 
+                            Department of Mechanical, Automation, Naval and Industrial Design Engineering at 
                             Chalmers University of Technology
                             '''
         self.log("Hubert the Guard Robot", color="blue", figlet=True)
@@ -77,12 +77,12 @@ class HandleTerminal():
                      \t\t 1. Enter your USER NAME -- You will be given 3 chances               \n   
                      \t\t 2. If your user name is registered, then you may enter your PASSWORD 
                      \t\t    Again you will be given 3 chances
-                  Upon successful authentication you will be grante access to this facility.   \n
+                  Upon successful authentication you will be granted access to this facility.   \n
                   If you fail to comply you will be given 3 warning and will take deadly force  
                   to deadly force to remove you from the facility.  
                   
                   You will be given 20 seconds to submit your credentials. \n
-                  Please press ENTER when you are read...           
+                  Please press ENTER when you are have PROPERLY read all the instructions...           
                   '''
         self.log(log_msg_1, "yellow")
 
@@ -97,7 +97,6 @@ class HandleTerminal():
         user_index = 0
 
         while (not access_granted and not no_of_attempts >=3):
-            # print no_of_attempts
             if(got_usr_name):
                 pswd = getpass.getpass('Please enter your PASSWORD:')
                 if (pswd == self.data["users"][user_index]["credentials"]["password"]):
@@ -111,16 +110,14 @@ class HandleTerminal():
                         feedback.treminal_feedback = "2 warning"
 
                     self.feedback_pub.publish(feedback)
-
-                    no_of_attempts += 1
-
                     access_granted = False
                     query = "YOU HAVE ANOTHER " + str(3 - no_of_attempts) + " ATTEMPS TO ENTER YOUR PASSWORD"
                     self.log(query, color="red")
+                    no_of_attempts += 1
+
             else:
                 for index,item in enumerate(self.data["users"]):
                     if(user_name == item["user_name"]):
-                        # print user_name
                         no_of_attempts = 0
                         user_index = index
                         got_usr_name =True
@@ -151,13 +148,14 @@ class HandleTerminal():
                     elif (no_of_attempts == 2):
                         feedback.treminal_feedback = "2 warning"
 
-                    no_of_attempts += 1
-
                     self.feedback_pub.publish(feedback)
 
                     query = "YOU HAVE ANOTHER " + str(3 - no_of_attempts) + " ATTEMPS TO ENTER YOUR USER NAME"
+
                     self.log(query, color="red")
                     user_name = raw_input()
+
+                    no_of_attempts += 1
 
 
         self.interrogationDone = True

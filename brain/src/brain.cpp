@@ -8,21 +8,16 @@ HubertBrain::HubertBrain():
     face_init = true;
     state_changed = false;
 
-//    neck_loop_= nh_.advertise<std_msgs::UInt16MultiArray>("/hubert_brain/servo_neck",1);
-//    body_loop_ = nh_.advertise<std_msgs::UInt16>("/hubert_brain/servo_body",1);
-
     neck_pan_loop_= nh_.advertise<std_msgs::UInt16>("/servo_neck_rot",1);
     neck_tilt_loop_= nh_.advertise<std_msgs::UInt16>("/servo_neck_tilt",1);
     body_loop_ = nh_.advertise<std_msgs::UInt16>("/servo_body",1);    
     robot_elbow_ = nh_.advertise<std_msgs::UInt16>("/servo_elbow",1);
     robot_shoulder_ = nh_.advertise<std_msgs::UInt16>("/servo_shoulder",1);
-
     fire_gun_ = nh_.advertise<std_msgs::Bool>("/fire_gun",1);
 
     say_hello_ = nh_.advertise<std_msgs::Bool>("/hubert_brain/say_hello",1);
     start_interrogation_ = nh_.advertise<std_msgs::Bool>("/hubert_brain/start_interrogation",1);
     access_details_ = nh_.advertise<brain::Access>("/hubert_brain/access_details",1);
-
     feedback_pub_ = nh_.advertise<brain::Feedback>("/hubert_brain/feedback",1);
     
     face_found_sub = nh_.subscribe("/face_detection/face_found", 1, &HubertBrain::faceFoundCallback,this);
@@ -30,21 +25,17 @@ HubertBrain::HubertBrain():
 
     terminalClient = nh_.serviceClient<brain::RequestTerminal>("/hubert_brain/terminal");
 
-
     ros::param::get("~PAN_LB",pan_lb);
     ros::param::get("~PAN_UB", pan_ub);
     ros::param::get("~PAN_STEP_SIZE", pan_step_size);
-
     ros::param::get("~TILT_LB",tilt_lb);
     ros::param::get("~TILT_UB", tilt_ub);
     ros::param::get("~TILT_STEP_SIZE", tilt_step_size);
-
     ros::param::get("~BODY_LB",body_lb);
     ros::param::get("~BODY_UB", body_ub);
     ros::param::get("~BODY_STEP_SIZE", body_step_size);
 
     ppl_passby_count = 0;
-
 }
 
 void HubertBrain::execute(){

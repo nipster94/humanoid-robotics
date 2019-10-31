@@ -5,6 +5,6 @@ users:
       password: asd
   - user_name: user_2
     credentials:
-      name: second user
+      name: Fredrik
       password: asd
 

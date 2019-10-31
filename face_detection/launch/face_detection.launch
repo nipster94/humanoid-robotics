@@ -6,5 +6,5 @@
 	<param name="RANGE_FOR_TRACKING" value="100" />
    </node>
 
-<!--   <include file="$(find face_detection)/launch/usb_cam_.launch"/>-->
+   <include file="$(find face_detection)/launch/usb_cam_.launch"/>
 </launch>

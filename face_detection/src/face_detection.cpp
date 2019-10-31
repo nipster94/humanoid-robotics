@@ -4,13 +4,8 @@ ROSFaceDetection::ROSFaceDetection():
  it_(nh_)
 {
     std::string pkg_ = "face_detection";
-    std::string ros_path_2 = ros::package::getPath("face_detection");
-    ros_path_2.erase(ros_path_2.find(pkg_), pkg_.size());
-
-    std::cout << ros_path_2 << std::endl;
-
-//    std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/face_detection/shape_predictor_68_face_landmarks.dat";
-    std::string ros_path_ = "/home/nipun/MPSYS/Q5/Humanoid_Robotics/Project/face_detection_ws/src/Extra/shape_predictor_68_face_landmarks.dat";
+    std::string ros_path_ = ros::package::getPath("face_detection");
+    ros_path_ += "/shape_predictor_68_face_landmarks.dat";
 
     image_sub_ = it_.subscribe("/camera/color/image_raw", 1, &ROSFaceDetection::imageCallBack,this);
     image_pub_ = it_.advertise("/face_detection/output_video", 1);
@@ -28,8 +23,6 @@ ROSFaceDetection::ROSFaceDetection():
 
 void ROSFaceDetection::execute(){
     ROS_INFO("START FACE TRACKING NODE !!!!");
-
-    int test = faceTracker.Temp();
 
     ros::Rate rate(10);
     while (ros::ok()) {
@@ -77,13 +70,11 @@ void ROSFaceDetection::getEllipseCenter(){
 void ROSFaceDetection::moveBase(){
     std::map<std::__cxx11::string,bool> move_base_data;
     move_base_data = faceTracker.moveBase();
-    //if move base if true we publish it until it become false
+    //if move base is true we publish it until it become false
     if(move_base_data["MOVE_BASE"] ){
-//        != currentMoveBase
         face_detection::MoveBase moveBaseMsg;
         moveBaseMsg.move_base = move_base_data["MOVE_BASE"];
         moveBaseMsg.turn_left = move_base_data["TURN_LEFT"];
-//        currentMoveBase = move_base_data["MOVE_BASE"];
         move_base_pub_.publish(moveBaseMsg);
     }
 }
@@ -93,8 +84,3 @@ void ROSFaceDetection::faceFound(){
     faceFoundMsg.data = faceTracker.requestDetectedRealTime();
     face_found_pub_.publish(faceFoundMsg);
 }
-
-
-
-
-

@@ -46,4 +46,6 @@ CMakeLists.txt.user
 
 #Clion
 */cmake-build-debug
+#doc files
+*/doc
 

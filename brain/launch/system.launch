@@ -30,6 +30,8 @@
     <!-- Language agent -->
     <node type="AgentMain.py" pkg="language" name="LanguageAgent" />
 
+
+
     <!-- Face detection and tracking-->
     <node pkg="face_detection" type="ros_face_detection" name="ros_face_detection" >
         <param name="SKIP_FRAMES" value="1" />

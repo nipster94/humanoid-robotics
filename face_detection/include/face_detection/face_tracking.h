@@ -64,7 +64,7 @@ class FaceTracking
         */
         ~FaceTracking(){}
 
-        /*! This is an enum class to check the current tracking state*/
+        /** \brief ENUM defining tracking state available*/
         enum TrackingState{
              Initialize     /*!< Initial state */,
              Tracking       /*!< Tracking state */,
@@ -72,6 +72,7 @@ class FaceTracking
         };
 
         /**
+         * \fn void initialize(std::string path_ , std::map<std::__cxx11::string, int> &param_)
          * \brief Initialize the library
          * This is the function which initialize the library and this must
          * be called otherwise, the other function cannot run this library.
@@ -81,8 +82,8 @@ class FaceTracking
          * \param [in] param_ ROS params
          */
         void initialize(std::string path_ , std::map<std::__cxx11::string, int> &param_);
-
         /**
+         * \fn void trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_)
          * \brief Face detection/tracking function
          * This is the main trigger function. Takes input image and returns the
          * detailed tracked image
@@ -92,6 +93,7 @@ class FaceTracking
          */
         void trackLandmark(cv::Mat &input_image_, cv::Mat &output_image_);
         /**
+         * \fn cv::RotatedRect requestEllipseCenter()
          * \brief Center bound of ellipse of the current tracking face will
          * be returned, upon the request from the ROS node
          *
@@ -99,6 +101,7 @@ class FaceTracking
          */
         cv::RotatedRect requestEllipseCenter();
         /**
+         * \fn bool requestDetectedRealTime()
          * \brief Status of the face detection, This value is a boolean
          * variable which return true if a face is present in the current
          * frame
@@ -107,12 +110,14 @@ class FaceTracking
          */
         bool requestDetectedRealTime();
         /**
+         * \fn int requestFacesSize()
          * \brief Number of close faces
          *
          * \return return the number of close faces detected
          */
         int requestFacesSize();
         /**
+         * \fn std::map<std::__cxx11::string, bool> moveBase()
          * \brief Status of the base frame
          * This function will return whether to whether or not
          * to rotate the base of the robot. Furthermore it will
@@ -123,7 +128,6 @@ class FaceTracking
          * \return return the move base command (move,direction)
          */
         std::map<std::__cxx11::string, bool> moveBase();
-    int Temp();
 
     private:
         int cfacesize = 0;                          /**< Number of close faces detected */
@@ -147,7 +151,7 @@ class FaceTracking
          */
         float calculateArea(float semi_major_axis, float semi_minor_axis);
         /**
-         * \fn RMSE( std::vector<cv::Point> ground_truth, std::vector<cv::Point> fitted_shapes)
+         * \fn float RMSE( std::vector<cv::Point> ground_truth, std::vector<cv::Point> fitted_shapes)
          * \brief calculate Root Mean Square Error of the current face and the ground truth
          * here the fround truth will be the values of the previously tracked face
          * \param [in] ground_truth ground truth face (vector point of the ellipse)
@@ -156,7 +160,7 @@ class FaceTracking
          */
         float RMSE( std::vector<cv::Point> ground_truth, std::vector<cv::Point> fitted_shapes);
         /**
-         * \fn getTrackingIndex(dlib::cv_image<dlib::bgr_pixel> img_, std::vector<dlib::rectangle> faces_)
+         * \fn int getTrackingIndex(dlib::cv_image<dlib::bgr_pixel> img_, std::vector<dlib::rectangle> faces_)
          * \brief return tracking index of the current tracking face of the dlib face rectangle vector
          * \param [in] img_ input image
          * \param [in] faces_ dlib face rectangle vector
@@ -164,7 +168,7 @@ class FaceTracking
          */
         int getTrackingIndex(dlib::cv_image<dlib::bgr_pixel> img_, std::vector<dlib::rectangle> faces_);
         /**
-         * \fn getCloseFaces(std::vector<dlib::rectangle> faces_,int tracking_index)
+         * \fn std::vector<dlib::rectangle> getCloseFaces(std::vector<dlib::rectangle> faces_,int tracking_index)
          * \brief Choose whether the face is in the correct range. We have provided
          * some parameters which could decide the range of tracking.
          * \param [in] faces_ dlib face rectangle vector
@@ -177,7 +181,7 @@ class FaceTracking
          */
         std::vector<dlib::rectangle> getCloseFaces(std::vector<dlib::rectangle> faces_,int tracking_index);
         /**
-         * \fn getMaxAreaIndex(dlib::cv_image<dlib::bgr_pixel> &img_,
+         * \fn void getMaxAreaIndex(dlib::cv_image<dlib::bgr_pixel> &img_,
                              std::vector<dlib::rectangle> &input,
                              cv::vector<cv::vector<cv::Point> > &all_landmarks_,
                              cv::vector< cv::vector<cv::Point> > &jaw_line,
@@ -201,7 +205,7 @@ class FaceTracking
                              cv::vector<cv::vector<cv::Point>> &jaw_line,
                              int &max_area_index);
         /**
-         * \fn startTracking(cv::Mat &image_,
+         * \fn void startTracking(cv::Mat &image_,
                              std::vector<dlib::rectangle> &cfaces,
                              cv::vector<cv::vector<cv::Point> > &all_landmarks_,
                              cv::vector< cv::vector<cv::Point> > &jaw_line,

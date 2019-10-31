@@ -47,8 +47,6 @@ class FaceTracker():
             self.rate.sleep()
 
     def face_found_callback(self,data):
-        # print data
-        # print self.face_found
         if(data.data):
             self.face_found = True
 
@@ -72,8 +70,6 @@ class FaceTracker():
             h = data.width.data
             self.current_angle_x, self.current_angle_y, distance = self.trackface(x,y,w,h)
 
-            # print self.current_angle_x, self.current_angle_y
-
             if self.init:
                 self.pre_angle_x = self.current_angle_x
                 self.pre_angle_y = self.current_angle_y
@@ -83,16 +79,9 @@ class FaceTracker():
             if abs(self.pre_angle_x - self.current_angle_x) > 30 and \
                     abs(self.pre_angle_y - self.current_angle_y) > 30:
 
-                # print self.pre_angle_x , self.current_angle_x
-                # print abs(self.pre_angle_x - self.current_angle_x)
-                # print self.pre_angle_y , self.current_angle_y
-                # print abs(self.pre_angle_y - self.current_angle_y)
-
                 self.gotNewData = True
                 self.pan_angle = self.current_angle_x
                 self.tilt_angle = self.current_angle_y
-
-            # self.neck_angles = [angle_x,angle_y]
 
     def move_base_callback(self,data):
 

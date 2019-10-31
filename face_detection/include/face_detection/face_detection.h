@@ -57,6 +57,7 @@ class ROSFaceDetection
         */
         ROSFaceDetection();
         /**
+         * \fn void execute(void)
          * \brief The executor node
          *
          *  This node will be call from the ROS NODE main and will
@@ -67,7 +68,7 @@ class ROSFaceDetection
 
     private:
         /**
-         * @defgroup  group1 ROS related varialbles
+         * @defgroup  group1 ROS related variables
          * In this group all the variables related to ROS will be define
          * @{
          */
@@ -93,6 +94,7 @@ class ROSFaceDetection
         /** @} */
 
         /**
+         * \fn void imageCallBack( const sensor_msgs::ImageConstPtr& msg)
          * \brief This callback will grab the image data from the camera
          * \param msg sensor_msgs::ImageConstPtr type message
          *
@@ -106,6 +108,7 @@ class ROSFaceDetection
          */
         void imageCallBack( const sensor_msgs::ImageConstPtr& msg);
         /**
+         * \fn void getEllipseCenter()
          * \brief This callback will publish the detected face details
          *
          * In this callback, center points of the ellipse center
@@ -116,6 +119,7 @@ class ROSFaceDetection
          */
         void getEllipseCenter();
         /**
+         * \fn void moveBase()
          * \brief This callback will publish move base status
          *
          * In this callback, the status of the MoveBase wil be published.
@@ -126,6 +130,7 @@ class ROSFaceDetection
          */
         void moveBase();
         /**
+         * \fn void faceFound()
          * \brief This callback will publish the current status of face detection
          *
          * In this callback, the status of the tracking will be published, via the topic
